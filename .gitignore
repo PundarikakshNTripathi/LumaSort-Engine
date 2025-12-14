@@ -1,0 +1,55 @@
+# Prerequisites
+*.d
+*.o
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build Folders
+build/
+bin/
+out/
+cmake-build-*/
+.cmake/
+
+# Vcpkg
+vcpkg_installed/
+vcpkg-overlays/
+vcpkg.json.lock
+
+# IDE / Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Project Specific
+context.md
+task.md
