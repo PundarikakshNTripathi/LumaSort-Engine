@@ -52,19 +52,19 @@ The engine follows a strict separation of concerns, dividing the application int
 ```mermaid
 graph TD
     subgraph Core
-        App[App Loop]
-        Main[Main Entry] --> App
+        App["App Loop"]
+        Main["Main Entry"] --> App
     end
 
     subgraph "Sub-systems"
-        UI[GuiLayer (ImGui)]
-        Gfx[Renderer (OpenGL)]
-        Sorter[Sorter & FlowField]
+        UI["GuiLayer (ImGui)"]
+        Gfx["Renderer (OpenGL)"]
+        Sorter["Sorter & FlowField"]
     end
 
     subgraph Dependencies
-        GLFW[GLFW Window]
-        CV[OpenCV Input]
+        GLFW["GLFW Window"]
+        CV["OpenCV Input"]
     end
 
     App -->|Updates| Sorter
