@@ -1,0 +1,19 @@
+{
+  "name": "lumasort-engine",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "opencv4",
+    "glfw3",
+    "glad",
+    "glm",
+    "stb",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    }
+  ]
+}
