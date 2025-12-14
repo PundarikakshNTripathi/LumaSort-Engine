@@ -4,11 +4,12 @@
 > This project is licensed under the **CC BY-NC-ND 4.0** license.  
 > See the [LICENSE](LICENSE) file for details.
 
-![C++](https://img.shields.io/badge/C%2B%2B-20-blue?logo=c%2B%2B&logoColor=white)
-![OpenGL](https://img.shields.io/badge/OpenGL-3.3-green?logo=opengl&logoColor=white)
-![ImGui](https://img.shields.io/badge/Dear_ImGui-Docking-blueviolet?logo=c%2B%2B&logoColor=white)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.x-red?logo=opencv&logoColor=white)
-![CMake](https://img.shields.io/badge/CMake-Build-orange?logo=cmake&logoColor=white)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
+[![OpenGL](https://img.shields.io/badge/OpenGL-3.3-FFFFFF?style=for-the-badge&logo=opengl)](https://www.opengl.org/)
+[![Dear ImGui](https://img.shields.io/badge/Dear_ImGui-Docking-880000?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://github.com/ocornut/imgui)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
+[![CMake](https://img.shields.io/badge/CMake-Build-064F8C?style=for-the-badge&logo=cmake&logoColor=white)](https://cmake.org/)
+[![vcpkg](https://img.shields.io/badge/vcpkg-Manifest-purple?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://vcpkg.io/)
 
 ---
 
@@ -66,7 +67,7 @@ graph TD
         CV[OpenCV Input]
     end
 
-    App -->|Updates| ROI
+    App -->|Updates| Sorter
     App -->|Renders| Gfx
     App -->|Renders| UI
     
@@ -76,9 +77,9 @@ graph TD
     UI -- Controls --> Sorter
     UI -- Controls --> Gfx
     
-    style App fill:#f9f,stroke:#333
-    style Sorter fill:#9cf,stroke:#333
-    style Gfx fill:#9f9,stroke:#333
+    style App fill:#f9f,stroke:#333,color:#000
+    style Sorter fill:#9cf,stroke:#333,color:#000
+    style Gfx fill:#9f9,stroke:#333,color:#000
 ```
 
 ---
