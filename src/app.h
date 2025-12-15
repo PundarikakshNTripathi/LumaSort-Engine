@@ -8,6 +8,8 @@
 #include "graphics/renderer.h"
 #include "graphics/canvas.h"
 #include "ui/gui_layer.h"
+#include "core/particle.h"
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 
@@ -96,4 +98,8 @@ private:
     cv::VideoCapture m_Webcam;
     cv::Mat m_CurrentFrame;
     cv::Mat m_StaticImage; // Loaded image
+
+    // Particle System
+    std::vector<Particle> m_Particles;
+    float m_Time = 0.0f;
 };

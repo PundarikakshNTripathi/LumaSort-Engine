@@ -25,6 +25,9 @@ add_executable(LumaSort
     src/graphics/canvas.h
     src/core/sorter.cpp
     src/core/sorter.h
+    src/core/particle.h
+    src/core/flow_field.cpp
+    src/core/flow_field.h
 )
 
 target_link_libraries(LumaSort PRIVATE
