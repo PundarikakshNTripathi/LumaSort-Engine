@@ -1,6 +1,11 @@
 #pragma once
 
 namespace UI {
+    // Forward declare App so we can pass it to render
+}
+class App;
+
+namespace UI {
 
     /**
      * @class GuiLayer
@@ -22,8 +27,9 @@ namespace UI {
 
         /**
          * @brief Defines the actual UI layout (Windows, Buttons, etc.).
+         * @param app Pointer to the main App instance for interacting with variables.
          */
-        void render();
+        void render(App* app);
 
         /**
          * @brief Ends the frame and issues draw calls to the GPU.

@@ -1,48 +1,61 @@
 #include "renderer.h"
 #include <glad/glad.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 namespace Graphics {
 
-    // Simple Shader Source
-    const char* particleVertexShaderSource = R"(
-        #version 330 core
-        layout (location = 0) in vec2 aPos;
-        layout (location = 1) in vec4 aColor;
-        out vec4 vColor;
-        void main() {
-            // Map 0..1 (Image Coords) to -1..1 (NDC)
-            // Flip Y so 0 is top
-            gl_Position = vec4(aPos.x * 2.0 - 1.0, (1.0 - aPos.y) * 2.0 - 1.0, 0.0, 1.0);
-            gl_PointSize = 2.0;
-            vColor = aColor;
+    // Basic file reading helper
+    std::string readFile(const char* path) {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open shader file: " << path << std::endl;
+            return "";
         }
-    )";
-
-    const char* particleFragmentShaderSource = R"(
-        #version 330 core
-        in vec4 vColor;
-        out vec4 FragColor;
-        void main() {
-            FragColor = vColor;
-        }
-    )";
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        return buffer.str();
+    }
 
     Renderer::Renderer() {
-        // Compile Shaders
+        // Compile Shaders from assets
+        std::string vertexCode = readFile("assets/shaders/particle.vert");
+        std::string fragmentCode = readFile("assets/shaders/particle.frag");
+        const char* vShaderCode = vertexCode.c_str();
+        const char* fShaderCode = fragmentCode.c_str();
+
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &particleVertexShaderSource, NULL);
+        glShaderSource(vertexShader, 1, &vShaderCode, NULL);
         glCompileShader(vertexShader);
-        // Check errors (omitted for brevity, but crucial in prod)
+        // Check errors
+        int success;
+        char infoLog[512];
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+            std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        }
 
         unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &particleFragmentShaderSource, NULL);
+        glShaderSource(fragmentShader, 1, &fShaderCode, NULL);
         glCompileShader(fragmentShader);
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+            std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        }
 
         m_ParticleShader = glCreateProgram();
         glAttachShader(m_ParticleShader, vertexShader);
         glAttachShader(m_ParticleShader, fragmentShader);
         glLinkProgram(m_ParticleShader);
+        
+        glGetProgramiv(m_ParticleShader, GL_LINK_STATUS, &success);
+        if (!success) {
+             glGetProgramInfoLog(m_ParticleShader, 512, NULL, infoLog);
+             std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        }
 
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);

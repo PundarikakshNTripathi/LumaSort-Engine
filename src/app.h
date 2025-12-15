@@ -7,8 +7,10 @@
 
 #include "graphics/renderer.h"
 #include "graphics/canvas.h"
+#include "graphics/texture.h"
 #include "ui/gui_layer.h"
 #include "core/particle.h"
+#include "core/sorter.h"
 #include <vector>
 
 #include <opencv2/opencv.hpp>
@@ -53,6 +55,29 @@ public:
     void run();
 
 private:
+    // --- UI & Interaction Hooks ---
+    // Allow GuiLayer to access private members for tuning
+    friend class UI::GuiLayer;
+
+public:
+    /**
+     * @brief Loads a source image from disk.
+     * @param path File path to image.
+     */
+    void loadSourceImage(const std::string& path);
+
+    /**
+     * @brief Loads a target image from disk.
+     * @param path File path to image.
+     */
+    void loadTargetImage(const std::string& path);
+
+    /**
+     * @brief Clears the drawing canvas.
+     */
+    void clearCanvas();
+
+private:
     /** 
      * @brief Internal initialization routine to setup GLFW, Glad, and ImGui.
      * Called automatically by the constructor.
@@ -88,7 +113,6 @@ private:
     int m_Height;
 
     // Subsystems
-    // Using unique_ptr for strict ownership - the App owns these systems explicitly.
     std::unique_ptr<Graphics::Renderer> m_Renderer;
     std::unique_ptr<UI::GuiLayer> m_GuiLayer;
     std::unique_ptr<Canvas> m_Canvas;
@@ -97,9 +121,54 @@ private:
     InputMode m_InputMode = InputMode::WEBCAM;
     cv::VideoCapture m_Webcam;
     cv::Mat m_CurrentFrame;
-    cv::Mat m_StaticImage; // Loaded image
+    cv::Mat m_StaticImage; // Loaded source image
+    cv::Mat m_FrozenFrame; // Captured frame when transform starts
+    
+    // Target State
+    cv::Mat m_TargetImage; // Loaded target image
+    std::unique_ptr<Texture2D> m_TargetPreview; // GPU texture for GUI preview
+
+    // Physics Parameters (Tunable via GUI)
+    float m_ParticleSpeed = 0.005f;
+    float m_FlowStrength = 0.0002f;
+    float m_NoiseScale = 5.0f;
 
     // Particle System
     std::vector<Particle> m_Particles;
     float m_Time = 0.0f;
+    
+    // Drawing State (for Canvas mode)
+    enum class DrawTool { PEN, ERASER, FILL };
+    DrawTool m_DrawTool = DrawTool::PEN;
+    glm::vec3 m_DrawColor = glm::vec3(1.0f, 0.0f, 0.0f); // Default red
+    float m_BrushSize = 4.0f;
+    bool m_IsDrawing = false;
+    glm::vec2 m_LastMousePos = glm::vec2(0.0f);
+    
+    // Core Logic
+    std::unique_ptr<Sorter> m_Sorter;
+    bool m_IsTransforming = false;
+    int m_SimulationWidth = 256;
+    int m_SimulationHeight = 256;
+    
+    /**
+     * @brief Recalculates particle targets based on current source and target images.
+     */
+    void recalculateTargets();
+    
+public:
+    /**
+     * @brief Starts the transform animation - particles begin moving to targets.
+     */
+    void startTransform();
+    
+    /**
+     * @brief Stops the transform animation and resets particles to source positions.
+     */
+    void stopTransform();
+    
+    /**
+     * @brief Returns whether transform is currently active.
+     */
+    bool isTransforming() const { return m_IsTransforming; }
 };
