@@ -1,6 +1,7 @@
 #include "canvas.h"
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 Canvas::Canvas(int width, int height)
     : m_width(width), m_height(height), m_fbo(0), m_lineVAO(0), m_lineVBO(0), m_shaderProgram(0)
@@ -38,7 +39,6 @@ void Canvas::initGL() {
 
     glBindVertexArray(m_lineVAO);
     glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
-    // Buffer for 2 points (Start, End)
     glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -52,44 +52,21 @@ void Canvas::initShader() {
     const char* vertexSrc = R"(
         #version 330 core
         layout (location = 0) in vec2 aPos;
-        void main() {
-            // Map [0, width] -> [-1, 1]
-            // We expect input in Normalized Device Coordinates (NDC) or we can use a uniform for ortho projection.
-            // For simplicity, let's assume the input to drawLine is already mapped or we simple map it here.
-            // Let's pass raw NDC coordinates for now, or use a simple orthographic logic.
-            // But wait, drawLine receives expected pixel coordinates or window coordinates?
-            // Usually mouse gives window coords. Let's map window coords to NDC here.
-            
-            gl_Position = vec4(aPos, 0.0, 1.0);
-        }
-    )";
-    // Wait, the vertex shader above expects NDC. 
-    // It's better to pass a uniform for resolution to map pixel coords to NDC.
-    // Let's rewrite:
-
-    const char* vertexSrcFixed = R"(
-        #version 330 core
-        layout (location = 0) in vec2 aPos;
         uniform vec2 uResolution;
         void main() {
-            // Convert pixel (0..width, 0..height) to NDC (-1..1, -1..1)
-            // Y is usually inverted in window coords vs OpenGL.
-            // Let's assume (0,0) is top-left from mouse, but OpenGL needs (0,0) center, Y up.
-            
             vec2 zeroOne = aPos / uResolution;
             vec2 zeroTwo = zeroOne * 2.0;
             vec2 clipSpace = zeroTwo - 1.0;
-            
-            // Flip Y because mouse is top-down, GL is bottom-up
             gl_Position = vec4(clipSpace.x, -clipSpace.y, 0.0, 1.0);
         }
     )";
 
     const char* fragmentSrc = R"(
         #version 330 core
+        uniform vec3 uColor;
         out vec4 FragColor;
         void main() {
-            FragColor = vec4(1.0, 1.0, 1.0, 1.0); // White
+            FragColor = vec4(uColor, 1.0);
         }
     )";
 
@@ -107,7 +84,7 @@ void Canvas::initShader() {
         return id;
     };
 
-    unsigned int vs = compile(GL_VERTEX_SHADER, vertexSrcFixed);
+    unsigned int vs = compile(GL_VERTEX_SHADER, vertexSrc);
     unsigned int fs = compile(GL_FRAGMENT_SHADER, fragmentSrc);
 
     m_shaderProgram = glCreateProgram();
@@ -130,32 +107,70 @@ void Canvas::initShader() {
 void Canvas::clear() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_width, m_height);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Canvas::drawLine(glm::vec2 start, glm::vec2 end, float brushSize) {
+void Canvas::fill(glm::vec3 color) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glViewport(0, 0, m_width, m_height);
+    glClearColor(color.r, color.g, color.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Canvas::drawLine(glm::vec2 start, glm::vec2 end, glm::vec3 color, float brushSize) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_width, m_height);
     
     glUseProgram(m_shaderProgram);
     
-    int loc = glGetUniformLocation(m_shaderProgram, "uResolution");
-    glUniform2f(loc, (float)m_width, (float)m_height);
-
-    glLineWidth(brushSize); // Note: glLineWidth > 1.0 is deprecated in Core Profile and might not work on all drivers.
-                            // But for a simple prototype it's often supported or we get 1px lines.
-                            // Truly thick lines require quad rendering. adhering to "Simulating a drawing pad", we'll try this.
-
-    glm::vec2 verts[2] = { start, end };
+    int resLoc = glGetUniformLocation(m_shaderProgram, "uResolution");
+    glUniform2f(resLoc, (float)m_width, (float)m_height);
     
-    glBindVertexArray(m_lineVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+    int colorLoc = glGetUniformLocation(m_shaderProgram, "uColor");
+    glUniform3f(colorLoc, color.r, color.g, color.b);
+
+    // Draw smooth line by interpolating points along the path
+    float dist = glm::length(end - start);
+    int steps = std::max(1, (int)(dist / (brushSize * 0.3f)));
     
-    glDrawArrays(GL_LINES, 0, 2);
+    for (int i = 0; i <= steps; ++i) {
+        float t = (steps > 0) ? (float)i / (float)steps : 0.0f;
+        glm::vec2 pos = start + t * (end - start);
+        
+        // Draw a point by drawing multiple lines in a circle pattern
+        for (int angle = 0; angle < 8; ++angle) {
+            float rad = (float)angle * 3.14159f / 4.0f;
+            float halfSize = brushSize * 0.5f;
+            glm::vec2 offset1(cos(rad) * halfSize, sin(rad) * halfSize);
+            glm::vec2 offset2(cos(rad + 3.14159f) * halfSize, sin(rad + 3.14159f) * halfSize);
+            
+            glm::vec2 verts[2] = { pos + offset1, pos + offset2 };
+            
+            glBindVertexArray(m_lineVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+            
+            glLineWidth(2.0f);
+            glDrawArrays(GL_LINES, 0, 2);
+        }
+    }
     
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+cv::Mat Canvas::getAsMat() const {
+    cv::Mat result(m_height, m_width, CV_8UC3);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glReadPixels(0, 0, m_width, m_height, GL_BGR, GL_UNSIGNED_BYTE, result.data);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    // Flip vertically because OpenGL origin is bottom-left
+    cv::flip(result, result, 0);
+    
+    return result;
 }

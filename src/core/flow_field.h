@@ -14,5 +14,5 @@ public:
      * @param time Global time for animation.
      * @return glm::vec2 The force vector.
      */
-    static glm::vec2 getForce(glm::vec2 pos, float time);
+    static glm::vec2 getForce(glm::vec2 pos, float time, float scale);
 };
