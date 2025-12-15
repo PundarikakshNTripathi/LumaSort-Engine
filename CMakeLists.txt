@@ -10,6 +10,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(nfd CONFIG REQUIRED)
 
 add_executable(LumaSort
     src/main.cpp
@@ -36,6 +37,7 @@ target_link_libraries(LumaSort PRIVATE
     glfw
     glm::glm
     imgui::imgui
+    nfd::nfd
 )
 
 if(UNIX)
