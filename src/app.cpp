@@ -89,6 +89,8 @@ void App::init() {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     m_GuiLayer = std::make_unique<UI::GuiLayer>();
+    m_TargetPreview = std::make_unique<Texture2D>();
+    m_Sorter = std::make_unique<Sorter>();
 }
 
 void App::run() {
@@ -119,7 +121,7 @@ void App::render() {
     // 3. Render UI Layer
     // We wrap this significantly to abstract ImGui frame management.
     m_GuiLayer->begin();
-    m_GuiLayer->render();
+    m_GuiLayer->render(this);
     m_GuiLayer->end();
 }
 
@@ -128,41 +130,50 @@ void App::update() {
     if (m_InputMode == InputMode::WEBCAM) {
         if (m_Webcam.isOpened()) {
             m_Webcam >> m_CurrentFrame;
+            
+            // Set resolution based on webcam frame (once)
+            if (!m_CurrentFrame.empty() && m_SimulationWidth == 256) {
+                int maxRes = 600; // Cap for webcam to maintain real-time performance
+                float aspectRatio = (float)m_CurrentFrame.cols / (float)m_CurrentFrame.rows;
+                m_SimulationWidth = std::min(m_CurrentFrame.cols, maxRes);
+                m_SimulationHeight = (int)(m_SimulationWidth / aspectRatio);
+                m_SimulationWidth = std::max(m_SimulationWidth, 256);
+                m_SimulationHeight = std::max(m_SimulationHeight, 256);
+                std::cout << "Webcam resolution: " << m_CurrentFrame.cols << "x" << m_CurrentFrame.rows 
+                          << " -> Simulation: " << m_SimulationWidth << "x" << m_SimulationHeight << std::endl;
+            }
         }
     } 
     else if (m_InputMode == InputMode::CANVAS) {
         processInput(); // Handle drawing interactions
         
-        // In Canvas mode, the current frame comes from the Canvas texture.
-        // However, Canvas stores result in a GL Texture.
-        // Our Sorter needs a cv::Mat (CPU side).
-        // This suggests we might need to read back pixels from Canvas if we want to sort it.
-        // BUT, the prompt says: "Every frame, update a central cv::Mat currentFrame based on the selected mode."
-        // For Canvas, reading back texture to cv::Mat every frame is slow (glReadPixels).
-        // For now, let's just make sure the Canvas is updated. 
-        // If the Sorter needs it, we will address that in Task C.
-        // Implementation detail: We might need to download the texture to m_CurrentFrame.
+        // Set canvas resolution to window size for full quality
+        if (m_SimulationWidth == 256) {
+            m_SimulationWidth = m_Width;
+            m_SimulationHeight = m_Height;
+            std::cout << "Canvas resolution: " << m_SimulationWidth << "x" << m_SimulationHeight << std::endl;
+        }
         
-        // For now, let's NOT do the expensive readback every frame unless strictly necessary for the sort.
-        // But to satisfy "update cv::Mat currentFrame based on selected mode", we should probably do it 
-        // OR acknowledge that for Canvas, the "source" is the texture.
-        // Let's assume for this phase, we just focus on the input handling logic.
+        // Read canvas texture back to CPU for sorting
+        m_CurrentFrame = m_Canvas->getAsMat();
     }
     else if (m_InputMode == InputMode::IMAGE) {
         if (!m_StaticImage.empty()) {
             m_StaticImage.copyTo(m_CurrentFrame);
         }
-        // If image not loaded, m_CurrentFrame remains whatever it was or empty.
     }
 
     // --- Particle System Update ---
     
-    if (m_Particles.empty()) {
-        m_Particles.reserve(256 * 256);
-        for (int y = 0; y < 256; ++y) {
-            for (int x = 0; x < 256; ++x) {
+    int numParticles = m_SimulationWidth * m_SimulationHeight;
+    if (m_Particles.size() != numParticles) {
+        m_Particles.clear();
+        m_Particles.reserve(numParticles);
+        float maxDim = (float)(m_SimulationWidth - 1);
+        for (int y = 0; y < m_SimulationHeight; ++y) {
+            for (int x = 0; x < m_SimulationWidth; ++x) {
                 Particle p;
-                p.pos = glm::vec2(x / 255.0f, y / 255.0f); 
+                p.pos = glm::vec2(x / maxDim, y / maxDim); 
                 p.vel = glm::vec2(0.0f);
                 p.acc = glm::vec2(0.0f);
                 p.target = p.pos;
@@ -172,83 +183,88 @@ void App::update() {
         }
     }
 
-    if (!m_CurrentFrame.empty()) {
+    // Update particle colors from current frame (or frozen frame during transform)
+    cv::Mat& colorSource = m_IsTransforming ? m_FrozenFrame : m_CurrentFrame;
+    if (!colorSource.empty()) {
         cv::Mat resizedFrame;
-        cv::resize(m_CurrentFrame, resizedFrame, cv::Size(256, 256));
+        cv::resize(colorSource, resizedFrame, cv::Size(m_SimulationWidth, m_SimulationHeight));
         
+        float maxDim = (float)(m_SimulationWidth - 1);
         for (int i = 0; i < m_Particles.size(); ++i) {
-            int x = i % 256;
-            int y = i / 256;
+            int x = i % m_SimulationWidth;
+            int y = i / m_SimulationWidth;
             cv::Vec3b pixel = resizedFrame.at<cv::Vec3b>(y, x);
             m_Particles[i].color = glm::vec4(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, 1.0f);
         }
     }
 
-    m_Time += 0.01f;
-    float speed = 0.005f;
-    float flowStrength = 0.0002f;
+    // Only apply physics when transforming
+    if (m_IsTransforming) {
+        m_Time += 0.01f;
 
-    for (auto& p : m_Particles) {
-        glm::vec2 desired = p.target - p.pos;
-        float dist = glm::length(desired);
-        
-        glm::vec2 steer = glm::vec2(0.0f);
-        if (dist > 0.0001f) {
-             steer = glm::normalize(desired) * speed;
+        for (auto& p : m_Particles) {
+            glm::vec2 desired = p.target - p.pos;
+            float dist = glm::length(desired);
+            
+            glm::vec2 steer = glm::vec2(0.0f);
+            if (dist > 0.0001f) {
+                 steer = glm::normalize(desired) * m_ParticleSpeed;
+            }
+
+            glm::vec2 flow = FlowField::getForce(p.pos, m_Time, m_NoiseScale) * m_FlowStrength;
+
+            p.acc += steer + flow;
+            p.vel += p.acc;
+            p.pos += p.vel;
+            p.acc = glm::vec2(0.0f);
+            p.vel *= 0.90f;
         }
-
-        glm::vec2 flow = FlowField::getForce(p.pos, m_Time) * flowStrength;
-
-        p.acc += steer + flow;
-        p.vel += p.acc;
-        p.pos += p.vel;
-        p.acc = glm::vec2(0.0f); // Reset acc
-        p.vel *= 0.90f;
+    } else {
+        // When not transforming, keep particles at their source grid positions
+        float maxDim = (float)(m_SimulationWidth - 1);
+        for (int i = 0; i < m_Particles.size(); ++i) {
+            int x = i % m_SimulationWidth;
+            int y = i / m_SimulationWidth;
+            m_Particles[i].pos = glm::vec2(x / maxDim, y / maxDim);
+            m_Particles[i].vel = glm::vec2(0.0f);
+            m_Particles[i].acc = glm::vec2(0.0f);
+        }
     }
 }
 
 void App::processInput() {
     if (m_InputMode == InputMode::CANVAS) {
-        // Simple mouse drawing
-        if (glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            double xpos, ypos;
-            glfwGetCursorPos(m_Window, &xpos, &ypos);
+        double xpos, ypos;
+        glfwGetCursorPos(m_Window, &xpos, &ypos);
+        
+        bool mouseDown = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        
+        if (mouseDown && !ImGui::GetIO().WantCaptureMouse) {
+            glm::vec2 currentPos = glm::vec2(xpos, ypos);
             
-            static double lastX = xpos;
-            static double lastY = ypos;
-            
-            // Check if this is a fresh press (not dragging from previous frame) 
-            // - technically we should track previous button state, but continuous drawing works fine.
-            // A better way is to track "dragging" state.
-            
-            // For simplicity, just draw line from last pos to current pos.
-            // Note: This logic assumes continuous polling.
-            
-            // Using a static/member constraint for previous position is better.
-            // Let's rely on simple small segments.
-            // If the mouse jumped huge distance (e.g. context switch), we might get a long line.
-            
-            m_Canvas->drawLine(glm::vec2(lastX, lastY), glm::vec2(xpos, ypos));
-            
-            lastX = xpos;
-            lastY = ypos;
+            if (!m_IsDrawing) {
+                // Just started drawing - draw a point at current position
+                m_IsDrawing = true;
+                m_LastMousePos = currentPos;
+                
+                // Draw initial point
+                if (m_DrawTool == DrawTool::PEN) {
+                    m_Canvas->drawLine(currentPos, currentPos, m_DrawColor, m_BrushSize);
+                } else if (m_DrawTool == DrawTool::ERASER) {
+                    m_Canvas->drawLine(currentPos, currentPos, glm::vec3(1.0f), m_BrushSize * 2.0f);
+                }
+            } else {
+                // Continue drawing
+                if (m_DrawTool == DrawTool::PEN) {
+                    m_Canvas->drawLine(m_LastMousePos, currentPos, m_DrawColor, m_BrushSize);
+                } else if (m_DrawTool == DrawTool::ERASER) {
+                    m_Canvas->drawLine(m_LastMousePos, currentPos, glm::vec3(1.0f), m_BrushSize * 2.0f);
+                }
+                
+                m_LastMousePos = currentPos;
+            }
         } else {
-            // Reset last pos logic when mouse released (so we don't draw line from release point to next click)
-             double xpos, ypos;
-             glfwGetCursorPos(m_Window, &xpos, &ypos);
-             // We can't update lastX/Y here easily without a member variable tracking "wasPressed".
-             // Let's just update lastX/Y to current when not pressed, so next press starts from there.
-             // (Small bug: if you move mouse then click, you get line from where you released to where you clicked? 
-             // No, because we update lastX/Y here).
-             
-             // Actually, the correct logic:
-             // On Press (Single Frame): last = current
-             // On Drag: draw(last, current), last = current
-             
-             // Since we are in poll method called every frame:
-             // We can just query position.
-             // We need a member to track "wasDown"
-             // But for now, let's just use the strict "last = current" when not down.
+            m_IsDrawing = false;
         }
     }
 }
@@ -264,4 +280,108 @@ void App::shutdown() {
         glfwDestroyWindow(m_Window);
     }
     glfwTerminate();
+}
+
+void App::loadSourceImage(const std::string& path) {
+    cv::Mat img = cv::imread(path);
+    if (!img.empty()) {
+        m_StaticImage = img;
+        
+        // Adapt simulation resolution based on image size
+        // Cap at 800x800 to maintain good performance on most systems
+        int maxRes = 800;
+        int newWidth = std::min(img.cols, maxRes);
+        int newHeight = std::min(img.rows, maxRes);
+        
+        // Maintain aspect ratio if one dimension exceeds max
+        float aspectRatio = (float)img.cols / (float)img.rows;
+        if (aspectRatio > 1.0f) {
+            newHeight = (int)(newWidth / aspectRatio);
+        } else {
+            newWidth = (int)(newHeight * aspectRatio);
+        }
+        
+        // Ensure minimum resolution
+        newWidth = std::max(newWidth, 128);
+        newHeight = std::max(newHeight, 128);
+        
+        m_SimulationWidth = newWidth;
+        m_SimulationHeight = newHeight;
+        
+        std::cout << "Loaded Source Image: " << path << std::endl;
+        std::cout << "  Resolution: " << img.cols << "x" << img.rows << std::endl;
+        std::cout << "  Simulation: " << m_SimulationWidth << "x" << m_SimulationHeight 
+                  << " (" << (m_SimulationWidth * m_SimulationHeight) << " particles)" << std::endl;
+    } else {
+        std::cerr << "Failed to load source image: " << path << std::endl;
+    }
+}
+
+void App::loadTargetImage(const std::string& path) {
+    cv::Mat img = cv::imread(path);
+    if (!img.empty()) {
+        m_TargetImage = img;
+        // Upload to GPU for preview
+        if (m_TargetPreview) {
+            m_TargetPreview->uploadFromOpenCV(m_TargetImage);
+        }
+        std::cout << "Loaded Target Image: " << path << std::endl;
+    } else {
+        std::cerr << "Failed to load target image: " << path << std::endl;
+    }
+}
+
+void App::clearCanvas() {
+    if (m_Canvas) {
+        m_Canvas->clear();
+    }
+}
+
+void App::recalculateTargets() {
+    // Need both source and target to calculate
+    if (m_FrozenFrame.empty() || m_TargetImage.empty()) {
+        return;
+    }
+    
+    // Use Sorter to get mapping
+    std::vector<glm::vec2> mapping = m_Sorter->sortImage(m_FrozenFrame, m_TargetImage, m_SimulationWidth, m_SimulationHeight);
+    
+    if (mapping.empty()) {
+        return;
+    }
+    
+    // Update particle targets based on mapping
+    // mapping[i] gives the target position for particle i (in pixel coordinates)
+    float normX = (float)(m_SimulationWidth - 1);
+    float normY = (float)(m_SimulationHeight - 1);
+    for (size_t i = 0; i < m_Particles.size() && i < mapping.size(); ++i) {
+        // Normalize to 0..1 range using proper dimension for each axis
+        m_Particles[i].target = glm::vec2(mapping[i].x / normX, mapping[i].y / normY);
+    }
+}
+
+void App::startTransform() {
+    if (m_TargetImage.empty()) {
+        std::cerr << "Cannot start transform: No target image loaded!" << std::endl;
+        return;
+    }
+    if (m_CurrentFrame.empty()) {
+        std::cerr << "Cannot start transform: No source image available!" << std::endl;
+        return;
+    }
+    
+    // Freeze the current frame for transformation
+    m_CurrentFrame.copyTo(m_FrozenFrame);
+    
+    // Calculate targets once based on frozen frame
+    recalculateTargets();
+    
+    m_IsTransforming = true;
+    std::cout << "Transform started" << std::endl;
+}
+
+void App::stopTransform() {
+    m_IsTransforming = false;
+    m_Time = 0.0f;
+    std::cout << "Transform stopped" << std::endl;
 }

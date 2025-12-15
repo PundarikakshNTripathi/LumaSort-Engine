@@ -8,6 +8,7 @@
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3-FFFFFF?style=for-the-badge&logo=opengl)](https://www.opengl.org/)
 [![Dear ImGui](https://img.shields.io/badge/Dear_ImGui-Docking-880000?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://github.com/ocornut/imgui)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
+[![NFD](https://img.shields.io/badge/NFD-Extended-4A90A4?style=for-the-badge&logo=files&logoColor=white)](https://github.com/btzy/nativefiledialog-extended)
 [![CMake](https://img.shields.io/badge/CMake-Build-064F8C?style=for-the-badge&logo=cmake&logoColor=white)](https://cmake.org/)
 [![vcpkg](https://img.shields.io/badge/vcpkg-Manifest-purple?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://vcpkg.io/)
 
@@ -17,48 +18,55 @@
 
 **LumaSort Engine** is a high-performance C++20 real-time visualizer that rearranges pixels from live video feeds, static images, or real-time drawings into a target image based on global luminance intensity. By combining a "Pixel Sorting" algorithm with Fluid Dynamics (Flow Fields), it creates a mesmerizing, fluid-like transition of pixels finding their new "home" based on brightness.
 
-This engine is built for performance, leveraging modern OpenGL for rendering, OpenCV for computer vision input, and a robust C++20 architecture required for real-time particle simulations.
+The engine features a complete GUI control panel with native file dialogs, real-time physics parameter tuning, and an interactive canvas with VIBGYOR color palette for drawing. Users can load source and target images, adjust particle behavior, and watch the transformation unfold with a single button click.
 
 ---
 
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Features](#features)
 - [How It Works](#how-it-works)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Directory Structure](#directory-structure)
 - [Setup & Quick Start](#setup--quick-start)
-- [Features](#features)
+- [Usage Guide](#usage-guide)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
 ---
 
 ## Features
-- **Multi-Input Support**: Live Webcam, Static Images, or Interactive Drawing Canvas.
-- **Real-time Visualization**: High-performance sorting at 60+ FPS.
-- **Fluid Dynamics**: Pixels move organically using Flow Fields (Perlin/Curl Noise).
-- **Physics Simulation**: Millions of particles steer towards their sorted target positions rather than just snapping.
-- **Customizable**: Adjust flow speed, particle count, and input sources on the fly.
+
+- **Multi-Input Support**: Live Webcam, Static Images, or Interactive Drawing Canvas
+- **Native File Dialogs**: OS-native file pickers for loading source and target images
+- **Interactive Canvas**: Draw with VIBGYOR color palette, adjustable brush sizes, and eraser tool
+- **Transform Control**: Start/Stop transformation with dedicated button - preview content before animating
+- **Adaptive Resolution**: Automatically adjusts particle count based on source image resolution
+- **Real-time Visualization**: High-performance sorting at 60+ FPS
+- **Physics Parameter Tuning**: Adjust particle speed, flow strength, and noise scale in real-time
+- **Fluid Dynamics**: Pixels move organically using Flow Fields (Perlin/Simplex Noise)
 
 ---
 
 ## How It Works
 
-1.  **Input Analysis**: The engine captures frames from a webcam or loads an image via OpenCV.
-2.  **Luminance Mapping**: Every pixel in the source is analyzed for its luminance (brightness) value.
-3.  **Target Matching**: A target image (e.g., a portrait) is pre-processed to understand the luminance distribution of its pixels.
-4.  **Particle Simulation**: Millions of particles (pixels) are spawned. Instead of instantly snapping to the target, they flow towards their destination using a Flow Field (Curl Noise or Perlin Noise), creating a fluid motion effect.
-    - **Steering**: Each particle feels a force pulling it towards its "sorted" position.
-    - **Flow**: A background vector field pushes particles around, adding organic turbulence.
-5.  **Sorting**: The core sorting algorithm ensures that a bright pixel from the webcam eventually settles into a bright spot on the target image.
+1.  **Input Selection**: Choose between Webcam, Image, or Canvas mode via the GUI dropdown
+2.  **Source Loading**: Load images using native file dialogs or draw on the canvas
+3.  **Target Loading**: Select a target image that defines the final shape/pattern
+4.  **Preview**: View your source content as a stable image before transformation
+5.  **Transform**: Click "Start Transform" to begin the particle animation
+    - **Luminance Sorting**: Each source pixel is matched to a target pixel of similar brightness
+    - **Steering Forces**: Particles feel a pull towards their sorted destination
+    - **Flow Field**: Background vector field adds organic turbulence to the motion
+6.  **Convergence**: Particles gradually settle into the target shape, recreating the image
 
 ---
 
 ## Architecture
 
-The engine follows a strict separation of concerns, dividing the application into Logic (Math/Sort), Data (app state), and Presentation (Renderer/UI).
+The engine follows a strict separation of concerns with a complete GUI layer for user interaction.
 
 ```mermaid
 graph TD
@@ -68,17 +76,18 @@ graph TD
     end
 
     subgraph "Sub-systems"
-        UI["GuiLayer (ImGui)"]
+        UI["GuiLayer (ImGui + NFD)"]
         Gfx["Renderer (OpenGL)"]
         Sorter["Sorter"]
         Flow["FlowField"]
-        Input["Inputs (Webcam/Canvas)"]
+        Input["Inputs (Webcam/Image/Canvas)"]
     end
 
     subgraph Dependencies
         GLFW["GLFW Window"]
         CV["OpenCV"]
         GL["OpenGL Texture"]
+        NFD["Native File Dialog"]
     end
 
     App -->|Updates| Input
@@ -93,14 +102,17 @@ graph TD
     App -->|Particles| Gfx
     Flow -->|Forces| App
     
+    UI -->|File Selection| NFD
     UI -- Controls --> Sorter
     UI -- Controls --> Gfx
     UI -- Controls --> Input
+    UI -- Transform --> App
     
     style App fill:#f9f,stroke:#333,color:#000
     style Sorter fill:#9cf,stroke:#333,color:#000
     style Gfx fill:#9f9,stroke:#333,color:#000
     style Flow fill:#c9f,stroke:#333,color:#000
+    style UI fill:#ff9,stroke:#333,color:#000
 ```
 
 ---
@@ -109,14 +121,15 @@ graph TD
 
 | Component | Technology | Reasoning |
 | :--- | :--- | :--- |
-| **Language** | C++20 | Required for high-performance memory management and modern language features (concepts, modules support). |
+| **Language** | C++20 | High-performance memory management and modern language features. |
 | **Build System** | CMake | Industry standard for cross-platform C++ build configuration. |
-| **Package Manager** | vcpkg | Seamless integration of libraries in "Manifest Mode" ensures reproducible builds. |
-| **Computer Vision** | OpenCV 4 | robust library for reading webcam feeds and efficient image matrix (`cv::Mat`) manipulation. |
-| **Rendering** | OpenGL 3.3+ | Low-level hardware acceleration is necessary to render millions of particles at 60 FPS. |
-| **Windowing** | GLFW + GLAD | Lightweight, standard way to create contexts and handle input on Linux/Windows. |
-| **UI** | Dear ImGui | Immediate Mode GUI is perfect for real-time debugging and parameter tuning variables like flow speed. |
-| **Math** | GLM | Standard mathematics library for graphics software (vectors, matrices, Perlin noise). |
+| **Package Manager** | vcpkg | Seamless integration of libraries in "Manifest Mode" for reproducible builds. |
+| **Computer Vision** | OpenCV 4 | Robust library for webcam feeds and efficient image matrix manipulation. |
+| **Rendering** | OpenGL 3.3+ | Hardware acceleration for rendering millions of particles at 60 FPS. |
+| **Windowing** | GLFW + GLAD | Lightweight, standard way to create contexts and handle input. |
+| **UI** | Dear ImGui | Immediate Mode GUI for real-time parameter tuning and controls. |
+| **File Dialogs** | NFD Extended | Cross-platform native file dialogs for OS-integrated file selection. |
+| **Math** | GLM | Standard mathematics library for graphics (vectors, matrices, noise). |
 
 ---
 
@@ -124,22 +137,24 @@ graph TD
 
 ```text
 lumasort-engine/
-├── vcpkg.json              # Dependency Manifest
+├── vcpkg.json              # Dependency Manifest (OpenCV, ImGui, NFD, etc.)
 ├── CMakeLists.txt          # Build Configuration
 ├── src/
 │   ├── main.cpp            # Entry Point
-│   ├── app.h/cpp           # Application & Event Loop
+│   ├── app.h/cpp           # Application Loop, State, & Transform Logic
 │   ├── core/
-│   │   ├── sorter.h/cpp    # Pixel Sorting Algorithm & Math
+│   │   ├── sorter.h/cpp    # Luminance-based Pixel Sorting Algorithm
 │   │   ├── particle.h      # Particle Entity Structure
-│   │   ├── flow_field.h/cpp# Fluid Math (Perlin Noise)
+│   │   └── flow_field.h/cpp# Fluid Math (Perlin/Simplex Noise)
 │   ├── graphics/
-│   │   ├── renderer.h/cpp  # OpenGL Wrapper & Particle Rendering
+│   │   ├── renderer.h/cpp  # OpenGL Particle Rendering
 │   │   ├── texture.h/cpp   # Texture Management & OpenCV Upload
-│   │   ├── canvas.h/cpp    # FBO Drawing Surface
+│   │   └── canvas.h/cpp    # FBO Drawing Surface with Color Support
 │   └── ui/
-│       ├── gui_layer.h/cpp # ImGui Overlay
-├── assets/                 # Shaders and Images
+│       └── gui_layer.h/cpp # ImGui Control Panel & Native File Dialogs
+├── assets/
+│   ├── shaders/            # GLSL Vertex & Fragment Shaders
+│   └── images/             # Sample Images
 └── build/                  # (Generated) Build artifacts
 ```
 
@@ -148,7 +163,6 @@ lumasort-engine/
 ## Setup & Quick Start
 
 ### 1. Requirements
-This project uses `vcpkg` which builds dependencies from source. This process requires a specific set of system development tools.
 
 **Essential Build Tools:**
 - C++ Compiler (GCC 11+ / Clang 14+)
@@ -157,13 +171,13 @@ This project uses `vcpkg` which builds dependencies from source. This process re
 
 **System Libraries (Linux):**
 - **X11 / OpenGL**: `libx11-dev`, `libglu1-mesa-dev`
+- **GTK3** (for native file dialogs): `libgtk-3-dev`
 - **Build Helpers**: `bison`, `flex`, `gperf`, `pkg-config`
-- **Python Build Environment**: `python3-venv` (Critical for building `libsystemd`)
+- **Python Build Environment**: `python3-venv`
 
 ### 2. Installation (One-line)
-Run this command to ensure your system is ready:
 ```bash
-sudo apt update && sudo apt install -y build-essential pkg-config cmake ninja-build autoconf autoconf-archive automake libtool bison flex gperf libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev libgl1-mesa-dev python3-venv python3-jinja2
+sudo apt update && sudo apt install -y build-essential pkg-config cmake ninja-build autoconf autoconf-archive automake libtool bison flex gperf libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev libgl1-mesa-dev libgtk-3-dev python3-venv python3-jinja2
 ```
 
 ### 3. Build & Run
@@ -178,7 +192,7 @@ sudo apt update && sudo apt install -y build-essential pkg-config cmake ninja-bu
     ```bash
     cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
     ```
-    *(Note: The first time you run this, vcpkg will download and build all dependencies. This may take 5-10 minutes.)*
+    *(Note: First build downloads and compiles all dependencies - may take 5-10 minutes)*
 
 3.  **Compile**
     ```bash
@@ -192,28 +206,64 @@ sudo apt update && sudo apt install -y build-essential pkg-config cmake ninja-bu
 
 ---
 
+## Usage Guide
+
+### Input Modes
+
+1. **Webcam**: Live camera feed (adapts to webcam resolution, capped at 600px)
+2. **Image**: Load any image file - resolution adapts automatically (up to 800px)
+3. **Canvas**: Draw with VIBGYOR colors using pen/eraser tools
+
+### Workflow
+
+1. Select input mode from the dropdown
+2. Load a **Target Image** using the native file dialog
+3. For Image mode: Load a **Source Image**
+4. For Canvas mode: Draw your design using the color palette
+5. Click **Start Transform** to begin the animation
+6. Adjust **Physics Parameters** (Speed, Flow Strength, Noise Scale) in real-time
+7. Click **Stop Transform** to reset and try again
+
+### Physics Parameters
+
+| Parameter | Description | Range |
+| :--- | :--- | :--- |
+| Particle Speed | How fast particles move toward targets | 0.001 - 0.1 |
+| Flow Strength | Intensity of turbulent flow field | 0.0001 - 0.01 |
+| Noise Scale | Size of flow field patterns | 1.0 - 20.0 |
+
+---
+
 ## Troubleshooting
 
 ### `vcpkg install failed` with `python3 -m venv failed`
-**Cause:** Older or minimal Linux distributions (like Ubuntu Server) often split the Python standard library. The `venv` module, required by the `libsystemd` build script, is missing.
 **Fix:** Install the missing python module:
 ```bash
 sudo apt install python3-venv
 ```
 
 ### `Could not find bison` or `GPERF not found`
-**Cause:** Some dependencies (OpenCV, glib) generate code during their build process and require these generator tools.
-**Fix:** Install the build tool suite:
+**Fix:** Install build tool suite:
 ```bash
 sudo apt install bison flex gperf
 ```
 
+### Native file dialogs not working
+**Cause:** GTK3 development libraries are required for native file dialogs on Linux.
+**Fix:**
+```bash
+sudo apt install libgtk-3-dev
+```
+
 ### `CMake Error: CMAKE_MAKE_PROGRAM is not set`
-**Cause:** You are missing a build backend like Make or Ninja.
 **Fix:**
 ```bash
 sudo apt install build-essential ninja-build
 ```
+
+### Low FPS with high-resolution images
+**Cause:** Very large images (5000x3000+) generate hundreds of thousands of particles.
+**Note:** This is expected behavior - the engine caps at 800px for images to maintain performance.
 
 ---
 
@@ -231,4 +281,4 @@ This project is distributed under the **Creative Commons Attribution-NonCommerci
 See [LICENSE](LICENSE) for the full legal text.
 
 ---
-*Built with ❤️ using C++20, OpenGL, Dear ImGui, OpenCV, and vcpkg.*
+*Built with ❤️ using C++20, OpenGL, Dear ImGui, OpenCV, NFD, and vcpkg.*
