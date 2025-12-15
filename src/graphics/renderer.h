@@ -1,5 +1,9 @@
 #pragma once
 
+
+#include <vector>
+#include "../core/particle.h"
+
 namespace Graphics {
 
     /**
@@ -23,6 +27,17 @@ namespace Graphics {
          * Should be called at the start of every frame.
          */
         void clear();
+
+        /**
+         * @brief Renders a list of particles as points.
+         * @param particles Vector of particles to render.
+         */
+        void renderParticles(const std::vector<Particle>& particles);
+
+    private:
+        unsigned int m_ParticleVAO = 0;
+        unsigned int m_ParticleVBO = 0;
+        unsigned int m_ParticleShader = 0;
     };
 
 }

@@ -38,7 +38,8 @@ This engine is built for performance, leveraging modern OpenGL for rendering, Op
 ## Features
 - **Multi-Input Support**: Live Webcam, Static Images, or Interactive Drawing Canvas.
 - **Real-time Visualization**: High-performance sorting at 60+ FPS.
-- **Fluid Dynamics**: Pixels move organically using Flow Fields.
+- **Fluid Dynamics**: Pixels move organically using Flow Fields (Perlin/Curl Noise).
+- **Physics Simulation**: Millions of particles steer towards their sorted target positions rather than just snapping.
 - **Customizable**: Adjust flow speed, particle count, and input sources on the fly.
 
 ---
@@ -49,6 +50,8 @@ This engine is built for performance, leveraging modern OpenGL for rendering, Op
 2.  **Luminance Mapping**: Every pixel in the source is analyzed for its luminance (brightness) value.
 3.  **Target Matching**: A target image (e.g., a portrait) is pre-processed to understand the luminance distribution of its pixels.
 4.  **Particle Simulation**: Millions of particles (pixels) are spawned. Instead of instantly snapping to the target, they flow towards their destination using a Flow Field (Curl Noise or Perlin Noise), creating a fluid motion effect.
+    - **Steering**: Each particle feels a force pulling it towards its "sorted" position.
+    - **Flow**: A background vector field pushes particles around, adding organic turbulence.
 5.  **Sorting**: The core sorting algorithm ensures that a bright pixel from the webcam eventually settles into a bright spot on the target image.
 
 ---
@@ -80,12 +83,15 @@ graph TD
 
     App -->|Updates| Input
     App -->|Updates| Sorter
+    App -->|Updates| Flow
     App -->|Renders| Gfx
     App -->|Renders| UI
     
     Input -->|Frame Data| Sorter
     Input -->|Drawing| GL
-    Sorter -->|Particles| Gfx
+    Sorter -->|Target Mappings| App
+    App -->|Particles| Gfx
+    Flow -->|Forces| App
     
     UI -- Controls --> Sorter
     UI -- Controls --> Gfx
@@ -94,6 +100,7 @@ graph TD
     style App fill:#f9f,stroke:#333,color:#000
     style Sorter fill:#9cf,stroke:#333,color:#000
     style Gfx fill:#9f9,stroke:#333,color:#000
+    style Flow fill:#c9f,stroke:#333,color:#000
 ```
 
 ---
@@ -109,7 +116,7 @@ graph TD
 | **Rendering** | OpenGL 3.3+ | Low-level hardware acceleration is necessary to render millions of particles at 60 FPS. |
 | **Windowing** | GLFW + GLAD | Lightweight, standard way to create contexts and handle input on Linux/Windows. |
 | **UI** | Dear ImGui | Immediate Mode GUI is perfect for real-time debugging and parameter tuning variables like flow speed. |
-| **Math** | GLM | Standard mathematics library for graphics software (vectors, matrices). |
+| **Math** | GLM | Standard mathematics library for graphics software (vectors, matrices, Perlin noise). |
 
 ---
 
@@ -122,15 +129,16 @@ lumasort-engine/
 ├── src/
 │   ├── main.cpp            # Entry Point
 │   ├── app.h/cpp           # Application & Event Loop
-    │   ├── core/
-    │   │   ├── sorter.h/cpp    # Pixel Sorting Algorithm & Math
-    │   │   ├── flow_field.h    # Fluid Math (TBD)
-    │   ├── graphics/
-    │   │   ├── renderer.h/cpp  # OpenGL Wrapper
-    │   │   ├── texture.h/cpp   # Texture Management & OpenCV Upload
-    │   │   ├── canvas.h/cpp    # FBO Drawing Surface
-    │   └── ui/
-    │       ├── gui_layer.h/cpp # ImGui Overlay
+│   ├── core/
+│   │   ├── sorter.h/cpp    # Pixel Sorting Algorithm & Math
+│   │   ├── particle.h      # Particle Entity Structure
+│   │   ├── flow_field.h/cpp# Fluid Math (Perlin Noise)
+│   ├── graphics/
+│   │   ├── renderer.h/cpp  # OpenGL Wrapper & Particle Rendering
+│   │   ├── texture.h/cpp   # Texture Management & OpenCV Upload
+│   │   ├── canvas.h/cpp    # FBO Drawing Surface
+│   └── ui/
+│       ├── gui_layer.h/cpp # ImGui Overlay
 ├── assets/                 # Shaders and Images
 └── build/                  # (Generated) Build artifacts
 ```
