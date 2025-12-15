@@ -35,6 +35,14 @@ This engine is built for performance, leveraging modern OpenGL for rendering, Op
 
 ---
 
+## Features
+- **Multi-Input Support**: Live Webcam, Static Images, or Interactive Drawing Canvas.
+- **Real-time Visualization**: High-performance sorting at 60+ FPS.
+- **Fluid Dynamics**: Pixels move organically using Flow Fields.
+- **Customizable**: Adjust flow speed, particle count, and input sources on the fly.
+
+---
+
 ## How It Works
 
 1.  **Input Analysis**: The engine captures frames from a webcam or loads an image via OpenCV.
@@ -59,23 +67,29 @@ graph TD
     subgraph "Sub-systems"
         UI["GuiLayer (ImGui)"]
         Gfx["Renderer (OpenGL)"]
-        Sorter["Sorter & FlowField"]
+        Sorter["Sorter"]
+        Flow["FlowField"]
+        Input["Inputs (Webcam/Canvas)"]
     end
 
     subgraph Dependencies
         GLFW["GLFW Window"]
-        CV["OpenCV Input"]
+        CV["OpenCV"]
+        GL["OpenGL Texture"]
     end
 
+    App -->|Updates| Input
     App -->|Updates| Sorter
     App -->|Renders| Gfx
     App -->|Renders| UI
     
+    Input -->|Frame Data| Sorter
+    Input -->|Drawing| GL
     Sorter -->|Particles| Gfx
-    CV -->|Frames| Sorter
     
     UI -- Controls --> Sorter
     UI -- Controls --> Gfx
+    UI -- Controls --> Input
     
     style App fill:#f9f,stroke:#333,color:#000
     style Sorter fill:#9cf,stroke:#333,color:#000
@@ -108,13 +122,15 @@ lumasort-engine/
 ├── src/
 │   ├── main.cpp            # Entry Point
 │   ├── app.h/cpp           # Application & Event Loop
-│   ├── core/
-│   │   ├── sorter.h/cpp    # Sorting Logic (TBD)
-│   │   ├── flow_field.h    # Fluid Math (TBD)
-│   ├── graphics/
-│   │   ├── renderer.h/cpp  # OpenGL Wrapper
-│   └── ui/
-│       ├── gui_layer.h/cpp # ImGui Overlay
+    │   ├── core/
+    │   │   ├── sorter.h/cpp    # Pixel Sorting Algorithm & Math
+    │   │   ├── flow_field.h    # Fluid Math (TBD)
+    │   ├── graphics/
+    │   │   ├── renderer.h/cpp  # OpenGL Wrapper
+    │   │   ├── texture.h/cpp   # Texture Management & OpenCV Upload
+    │   │   ├── canvas.h/cpp    # FBO Drawing Surface
+    │   └── ui/
+    │       ├── gui_layer.h/cpp # ImGui Overlay
 ├── assets/                 # Shaders and Images
 └── build/                  # (Generated) Build artifacts
 ```
