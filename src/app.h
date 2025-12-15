@@ -6,7 +6,16 @@
 #include <string>
 
 #include "graphics/renderer.h"
+#include "graphics/canvas.h"
 #include "ui/gui_layer.h"
+
+#include <opencv2/opencv.hpp>
+
+enum class InputMode {
+    WEBCAM,
+    IMAGE,
+    CANVAS
+};
 
 /**
  * @class App
@@ -60,6 +69,16 @@ private:
      */
     void render();
 
+    /**
+     * @brief Updates application state (Input handling, sorting logic).
+     */
+    void update();
+
+    /**
+     * @brief Processes input based on current mode.
+     */
+    void processInput();
+
     // Window State
     GLFWwindow* m_Window = nullptr;
     std::string m_Title;
@@ -70,4 +89,11 @@ private:
     // Using unique_ptr for strict ownership - the App owns these systems explicitly.
     std::unique_ptr<Graphics::Renderer> m_Renderer;
     std::unique_ptr<UI::GuiLayer> m_GuiLayer;
+    std::unique_ptr<Canvas> m_Canvas;
+
+    // Input State
+    InputMode m_InputMode = InputMode::WEBCAM;
+    cv::VideoCapture m_Webcam;
+    cv::Mat m_CurrentFrame;
+    cv::Mat m_StaticImage; // Loaded image
 };

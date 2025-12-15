@@ -19,6 +19,12 @@ add_executable(LumaSort
     src/graphics/renderer.h
     src/ui/gui_layer.cpp
     src/ui/gui_layer.h
+    src/graphics/texture.cpp
+    src/graphics/texture.h
+    src/graphics/canvas.cpp
+    src/graphics/canvas.h
+    src/core/sorter.cpp
+    src/core/sorter.h
 )
 
 target_link_libraries(LumaSort PRIVATE
