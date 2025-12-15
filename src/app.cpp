@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "core/flow_field.h"
 
 App::App(const std::string& title, int width, int height)
     : m_Title(title), m_Width(width), m_Height(height) {
@@ -112,7 +113,10 @@ void App::render() {
     // 1. Clear the screen
     m_Renderer->clear();
 
-    // 2. Render UI Layer
+    // 2. Render Particles
+    m_Renderer->renderParticles(m_Particles);
+
+    // 3. Render UI Layer
     // We wrap this significantly to abstract ImGui frame management.
     m_GuiLayer->begin();
     m_GuiLayer->render();
@@ -149,6 +153,57 @@ void App::update() {
             m_StaticImage.copyTo(m_CurrentFrame);
         }
         // If image not loaded, m_CurrentFrame remains whatever it was or empty.
+    }
+
+    // --- Particle System Update ---
+    
+    if (m_Particles.empty()) {
+        m_Particles.reserve(256 * 256);
+        for (int y = 0; y < 256; ++y) {
+            for (int x = 0; x < 256; ++x) {
+                Particle p;
+                p.pos = glm::vec2(x / 255.0f, y / 255.0f); 
+                p.vel = glm::vec2(0.0f);
+                p.acc = glm::vec2(0.0f);
+                p.target = p.pos;
+                p.color = glm::vec4(1.0f);
+                m_Particles.push_back(p);
+            }
+        }
+    }
+
+    if (!m_CurrentFrame.empty()) {
+        cv::Mat resizedFrame;
+        cv::resize(m_CurrentFrame, resizedFrame, cv::Size(256, 256));
+        
+        for (int i = 0; i < m_Particles.size(); ++i) {
+            int x = i % 256;
+            int y = i / 256;
+            cv::Vec3b pixel = resizedFrame.at<cv::Vec3b>(y, x);
+            m_Particles[i].color = glm::vec4(pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f, 1.0f);
+        }
+    }
+
+    m_Time += 0.01f;
+    float speed = 0.005f;
+    float flowStrength = 0.0002f;
+
+    for (auto& p : m_Particles) {
+        glm::vec2 desired = p.target - p.pos;
+        float dist = glm::length(desired);
+        
+        glm::vec2 steer = glm::vec2(0.0f);
+        if (dist > 0.0001f) {
+             steer = glm::normalize(desired) * speed;
+        }
+
+        glm::vec2 flow = FlowField::getForce(p.pos, m_Time) * flowStrength;
+
+        p.acc += steer + flow;
+        p.vel += p.acc;
+        p.pos += p.vel;
+        p.acc = glm::vec2(0.0f); // Reset acc
+        p.vel *= 0.90f;
     }
 }
 
