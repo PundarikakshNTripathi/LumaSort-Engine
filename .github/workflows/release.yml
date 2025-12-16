@@ -106,7 +106,7 @@ jobs:
   # MACOS BUILD
   # ============================================
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
     - name: Checkout code
@@ -114,18 +114,23 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Install system dependencies
       run: |
-        brew install cmake ninja pkg-config autoconf automake libtool
+        brew install cmake ninja pkg-config autoconf automake libtool make
 
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
+        vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
 
     - name: Configure CMake
       run: |
-        cmake -B build -S . \
+        cmake -B build -S . -G Ninja \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
           -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake
 
