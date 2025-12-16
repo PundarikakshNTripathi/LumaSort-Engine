@@ -52,10 +52,26 @@ jobs:
 
     - name: Package Linux
       run: |
-        mkdir -p package/LumaSort-linux
+        mkdir -p package/LumaSort-linux/lib
         cp build/LumaSort package/LumaSort-linux/
+        
+        # Copy all shared libraries from vcpkg
+        cp -r build/vcpkg_installed/x64-linux/lib/*.so* package/LumaSort-linux/lib/ 2>/dev/null || true
+        
+        # Create launcher script that sets library path
+        cat > package/LumaSort-linux/run.sh << 'EOF'
+        #!/bin/bash
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        export LD_LIBRARY_PATH="$SCRIPT_DIR/lib:$LD_LIBRARY_PATH"
+        cd "$SCRIPT_DIR"
+        ./LumaSort "$@"
+        EOF
+        chmod +x package/LumaSort-linux/run.sh
+        
+        # Copy assets and docs
         cp -r assets package/LumaSort-linux/
         cp README.md LICENSE package/LumaSort-linux/
+        
         tar -czvf LumaSort-linux-x86_64.tar.gz -C package LumaSort-linux
 
     - name: Upload Linux Artifact
@@ -94,9 +110,15 @@ jobs:
       run: |
         mkdir package\LumaSort-windows
         copy build\Release\LumaSort.exe package\LumaSort-windows\
+        
+        # Copy all DLLs from vcpkg installed folder
+        xcopy /Y build\vcpkg_installed\x64-windows\bin\*.dll package\LumaSort-windows\
+        
+        # Copy assets and docs
         xcopy /E /I assets package\LumaSort-windows\assets
         copy README.md package\LumaSort-windows\
         copy LICENSE package\LumaSort-windows\
+        
         Compress-Archive -Path package\LumaSort-windows -DestinationPath LumaSort-windows-x64.zip
 
     - name: Upload Windows Artifact
