@@ -30,7 +30,8 @@ The engine features a complete GUI control panel with native file dialogs, real-
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Directory Structure](#directory-structure)
-- [Setup & Quick Start](#setup--quick-start)
+- [Download & Run](#download--run)
+- [Build from Source](#build-from-source)
 - [Usage Guide](#usage-guide)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
@@ -160,7 +161,37 @@ lumasort-engine/
 
 ---
 
-## Setup & Quick Start
+## Download & Run
+
+Pre-built releases are available for **Windows** and **Linux**. No compilation required!
+
+### 📥 Download
+
+Go to the [**Releases Page**](https://github.com/PundarikakshNTripathi/LumaSort-Engine/releases) and download the latest version for your OS.
+
+### 🪟 Windows
+
+1. Download `LumaSort-windows-x64.zip`
+2. Extract the ZIP file
+3. Double-click `LumaSort.exe` to run
+
+### 🐧 Linux
+
+1. Download `LumaSort-linux-x86_64.tar.gz`
+2. Extract and run:
+```bash
+tar -xzvf LumaSort-linux-x86_64.tar.gz
+cd LumaSort-linux
+./run.sh
+```
+
+> **Note:** The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
+
+---
+
+## Build from Source
+
+If you want to modify the code or build for a different platform, follow these instructions.
 
 ### 1. Requirements
 
