@@ -36,7 +36,7 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
 
     - name: Configure CMake
       run: |
@@ -76,7 +76,7 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
+        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
 
     - name: Configure CMake
       run: |
@@ -103,59 +103,10 @@ jobs:
         path: LumaSort-windows-x64.zip
 
   # ============================================
-  # MACOS BUILD
-  # ============================================
-  build-macos:
-    runs-on: macos-14
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install system dependencies
-      run: |
-        brew install cmake ninja pkg-config autoconf automake libtool make
-
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: '01f602195983451bc83e72f4214af2cbc495aa94'
-
-    - name: Configure CMake
-      run: |
-        cmake -B build -S . -G Ninja \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake
-
-    - name: Build
-      run: cmake --build build --config ${{env.BUILD_TYPE}} -j$(sysctl -n hw.ncpu)
-
-    - name: Package macOS
-      run: |
-        mkdir -p package/LumaSort-macos
-        cp build/LumaSort package/LumaSort-macos/
-        cp -r assets package/LumaSort-macos/
-        cp README.md LICENSE package/LumaSort-macos/
-        tar -czvf LumaSort-macos-arm64.tar.gz -C package LumaSort-macos
-
-    - name: Upload macOS Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: LumaSort-macos-arm64
-        path: LumaSort-macos-arm64.tar.gz
-
-  # ============================================
   # CREATE GITHUB RELEASE
   # ============================================
   release:
-    needs: [build-linux, build-windows, build-macos]
+    needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     
@@ -171,7 +122,6 @@ jobs:
         files: |
           artifacts/LumaSort-linux-x86_64/LumaSort-linux-x86_64.tar.gz
           artifacts/LumaSort-windows-x64/LumaSort-windows-x64.zip
-          artifacts/LumaSort-macos-arm64/LumaSort-macos-arm64.tar.gz
         draft: false
         prerelease: false
         generate_release_notes: true
