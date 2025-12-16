@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:  # Allows manual trigger
 
+permissions:
+  contents: write
+
 env:
   BUILD_TYPE: Release
 
