@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 namespace Graphics {
 
@@ -99,18 +100,49 @@ namespace Graphics {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void Renderer::renderParticles(const std::vector<Particle>& particles) {
+    /**
+     * @brief Renders particles as points with dynamic sizing to prevent gaps.
+     * 
+     * This function calculates the optimal point size based on the ratio between
+     * viewport dimensions and simulation grid dimensions. A 1.5x multiplier ensures
+     * particles overlap slightly, preventing visible gaps between adjacent particles.
+     * 
+     * This addresses GitHub Issue #8: On integrated graphics (Intel HD), fixed point
+     * sizes cause visible vertical black lines when viewport/simulation ratio exceeds
+     * the point size.
+     * 
+     * @param particles Vector of particles to render.
+     * @param viewportWidth Current viewport width in pixels.
+     * @param viewportHeight Current viewport height in pixels.
+     * @param simWidth Simulation grid width (number of particles horizontally).
+     * @param simHeight Simulation grid height (number of particles vertically).
+     * 
+     * @note Point size formula: max(viewportWidth/simWidth, viewportHeight/simHeight) * 1.5
+     * @note Minimum point size is clamped to 1.0 to ensure visibility.
+     */
+    void Renderer::renderParticles(const std::vector<Particle>& particles, int viewportWidth, int viewportHeight, int simWidth, int simHeight) {
         if (particles.empty()) return;
 
         glUseProgram(m_ParticleShader);
+        
+        // Calculate point size to ensure particles fill the viewport without gaps.
+        // The 1.5x multiplier creates deliberate overlap to prevent visible stride artifacts.
+        float pointSizeX = (float)viewportWidth / (float)simWidth * 1.5f;
+        float pointSizeY = (float)viewportHeight / (float)simHeight * 1.5f;
+        float pointSize = std::max(pointSizeX, pointSizeY);
+        pointSize = std::max(pointSize, 1.0f);  // Clamp to minimum 1.0
+        
+        // Pass dynamic point size to vertex shader via uniform
+        int pointSizeLoc = glGetUniformLocation(m_ParticleShader, "uPointSize");
+        glUniform1f(pointSizeLoc, pointSize);
+        
         glBindVertexArray(m_ParticleVAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);
 
-        // Upload data
-        // Using GL_STREAM_DRAW because we update every frame
+        // Upload particle data - using GL_STREAM_DRAW for per-frame updates
         glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(Particle), particles.data(), GL_STREAM_DRAW);
 
-        glEnable(GL_PROGRAM_POINT_SIZE); // Ensure point size works provided shader writes it
+        glEnable(GL_PROGRAM_POINT_SIZE);
         glDrawArrays(GL_POINTS, 0, (GLsizei)particles.size());
         glDisable(GL_PROGRAM_POINT_SIZE);
 

@@ -296,6 +296,10 @@ sudo apt install build-essential ninja-build
 **Cause:** Very large images (5000x3000+) generate hundreds of thousands of particles.
 **Note:** This is expected behavior - the engine caps at 800px for images to maintain performance.
 
+### Vertical black lines on Intel HD graphics
+**Cause:** Fixed point size rendering causes gaps between particles on certain GPU/resolution combinations.
+**Status:** Fixed in v1.0.1. If you see this issue, ensure you're running the latest version.
+
 ---
 
 ## License
