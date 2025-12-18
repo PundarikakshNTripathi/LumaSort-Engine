@@ -115,8 +115,9 @@ void App::render() {
     // 1. Clear the screen
     m_Renderer->clear();
 
-    // 2. Render Particles
-    m_Renderer->renderParticles(m_Particles);
+    // 2. Render Particles with viewport-aware point sizing
+    // Pass current window size and simulation dimensions to calculate proper point size
+    m_Renderer->renderParticles(m_Particles, m_Width, m_Height, m_SimulationWidth, m_SimulationHeight);
 
     // 3. Render UI Layer
     // We wrap this significantly to abstract ImGui frame management.
