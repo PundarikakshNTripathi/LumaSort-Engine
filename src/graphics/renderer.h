@@ -31,8 +31,12 @@ namespace Graphics {
         /**
          * @brief Renders a list of particles as points.
          * @param particles Vector of particles to render.
+         * @param viewportWidth Current viewport width in pixels.
+         * @param viewportHeight Current viewport height in pixels.
+         * @param simWidth Simulation grid width (number of particles horizontally).
+         * @param simHeight Simulation grid height (number of particles vertically).
          */
-        void renderParticles(const std::vector<Particle>& particles);
+        void renderParticles(const std::vector<Particle>& particles, int viewportWidth, int viewportHeight, int simWidth, int simHeight);
 
     private:
         unsigned int m_ParticleVAO = 0;

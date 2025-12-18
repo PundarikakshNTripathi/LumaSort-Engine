@@ -162,15 +162,35 @@ void Canvas::drawLine(glm::vec2 start, glm::vec2 end, glm::vec3 color, float bru
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+/**
+ * @brief Reads the canvas texture back to CPU as an OpenCV Mat.
+ * 
+ * Captures the current FBO contents and returns them as a BGR OpenCV matrix.
+ * Handles pixel alignment to prevent stride artifacts on certain GPUs.
+ * 
+ * @return cv::Mat BGR image of the canvas contents.
+ * 
+ * @note The image is flipped vertically to match OpenCV's top-left origin
+ *       convention (OpenGL uses bottom-left origin).
+ * @note GL_PACK_ALIGNMENT is set to 1 to match OpenCV's tight packing,
+ *       addressing GitHub Issue #8.
+ */
 cv::Mat Canvas::getAsMat() const {
     cv::Mat result(m_height, m_width, CV_8UC3);
-    
+
+    // Set pack alignment to 1 byte to match OpenCV's tightly-packed layout.
+    // Prevents stride artifacts when reading pixels back to CPU.
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glReadPixels(0, 0, m_width, m_height, GL_BGR, GL_UNSIGNED_BYTE, result.data);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+
+    // Restore default alignment to avoid affecting other OpenGL operations
+    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
     // Flip vertically because OpenGL origin is bottom-left
     cv::flip(result, result, 0);
-    
+
     return result;
 }
