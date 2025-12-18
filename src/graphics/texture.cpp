@@ -25,23 +25,49 @@ void Texture2D::bind(unsigned int unit) const {
     glBindTexture(GL_TEXTURE_2D, m_rendererID);
 }
 
+/**
+ * @brief Uploads pixel data from an OpenCV Mat to the GPU texture.
+ * 
+ * This function handles the OpenCV-to-OpenGL data transfer with proper alignment
+ * settings to prevent stride artifacts. Key considerations:
+ * 
+ * 1. **Memory Continuity**: OpenCV Mats may have gaps between rows (e.g., from ROI
+ *    operations). Non-continuous Mats are cloned to ensure contiguous memory.
+ * 
+ * 2. **Pixel Alignment**: OpenGL defaults to 4-byte row alignment, but OpenCV uses
+ *    tight packing. We set GL_UNPACK_ALIGNMENT to 1 to prevent stride mismatches
+ *    that cause vertical black lines on certain GPUs (especially Intel integrated).
+ * 
+ * 3. **Color Format**: OpenCV uses BGR ordering; we specify GL_BGR accordingly.
+ * 
+ * @param mat The source OpenCV matrix (supports 1, 3, or 4 channel images).
+ * 
+ * @note Addresses GitHub Issue #8: Vertical black stride artifacts on input feed.
+ * @warning Empty matrices are rejected with an error message.
+ * 
+ * @see https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_upload_and_pixel_reads
+ */
 void Texture2D::uploadFromOpenCV(const cv::Mat& mat) {
     if (mat.empty()) {
         std::cerr << "Texture2D::uploadFromOpenCV: Empty matrix provided!" << std::endl;
         return;
     }
 
-    m_width = mat.cols;
-    m_height = mat.rows;
+    // Ensure continuous memory layout - clone if Mat has gaps between rows
+    // (can happen with ROI operations or certain OpenCV functions)
+    cv::Mat uploadMat = mat.isContinuous() ? mat : mat.clone();
+
+    m_width = uploadMat.cols;
+    m_height = uploadMat.rows;
 
     GLenum format = GL_RGB;
-    if (mat.channels() == 4) {
+    if (uploadMat.channels() == 4) {
         format = GL_RGBA;
         m_internalFormat = GL_RGBA8;
-    } else if (mat.channels() == 3) {
+    } else if (uploadMat.channels() == 3) {
         format = GL_BGR; // OpenCV uses BGR by default
         m_internalFormat = GL_RGB8;
-    } else if (mat.channels() == 1) {
+    } else if (uploadMat.channels() == 1) {
         format = GL_RED;
         m_internalFormat = GL_R8;
     }
@@ -49,20 +75,17 @@ void Texture2D::uploadFromOpenCV(const cv::Mat& mat) {
     m_dataFormat = format;
 
     glBindTexture(GL_TEXTURE_2D, m_rendererID);
-    
-    // Pixel alignment for OpenCV data (rows are 4-byte aligned by default implementation, 
-    // but sometimes tight packing is needed, though default usually works for 3/4 channels. 
-    // For 1 channel or odd widths, glPixelStorei might be needed.)
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 
-    glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, mat.data);
-    
-    // Reset alignment to default
+    // Set pixel row alignment to 1 byte to match OpenCV's tightly-packed layout.
+    // OpenGL defaults to 4-byte alignment, causing artifacts when row size isn't
+    // divisible by 4 (e.g., 641×3 = 1923 bytes per row).
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, uploadMat.data);
+
+    // Restore default alignment to avoid affecting other OpenGL operations
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    // Generate mipmaps if needed, but for video feed it's usually overkill/slow every frame. 
-    // We kept min filter linear so no mipmaps needed.
-    
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 

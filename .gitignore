@@ -53,4 +53,5 @@ vcpkg.json.lock
 # Project Specific
 context.md
 task.md
+project_guide.md
 imgui.ini
