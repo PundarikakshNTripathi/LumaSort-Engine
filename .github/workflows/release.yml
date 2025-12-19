@@ -11,6 +11,8 @@ permissions:
 
 env:
   BUILD_TYPE: Release
+  # Use a newer vcpkg commit for better arm64-osx support
+  VCPKG_COMMIT: '86a181505ac6460f98568ef5fde6dec2b5200a4a'
 
 jobs:
   # ============================================
@@ -34,12 +36,14 @@ jobs:
           bison flex gperf \
           libx11-dev libxext-dev libxrandr-dev libxinerama-dev \
           libxcursor-dev libxi-dev libglu1-mesa-dev libgl1-mesa-dev \
-          libgtk-3-dev python3-venv python3-jinja2
+          libgtk-3-dev python3-venv python3-jinja2 \
+          libxkbcommon-dev libwayland-dev wayland-protocols \
+          libepoxy-dev
 
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
+        vcpkgGitCommitId: ${{env.VCPKG_COMMIT}}
 
     - name: Configure CMake
       run: |
@@ -96,7 +100,7 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
+        vcpkgGitCommitId: ${{env.VCPKG_COMMIT}}
 
     - name: Configure CMake
       run: |
@@ -129,10 +133,10 @@ jobs:
         path: LumaSort-windows-x64.zip
 
   # ============================================
-  # MACOS BUILD (Universal: Apple Silicon + Intel)
+  # MACOS BUILD (Apple Silicon)
   # ============================================
   build-macos:
-    runs-on: macos-14  # Apple Silicon runner (M1)
+    runs-on: macos-14
     
     steps:
     - name: Checkout code
@@ -142,18 +146,24 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        brew install cmake ninja pkg-config autoconf automake libtool
+        brew install cmake ninja pkg-config autoconf automake libtool python@3.12
+        # Ensure python3 is available for glad build
+        echo "$(brew --prefix python@3.12)/libexec/bin" >> $GITHUB_PATH
 
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
+        vcpkgGitCommitId: ${{env.VCPKG_COMMIT}}
 
     - name: Configure CMake
       run: |
         cmake -B build -S . \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake
+          -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake \
+          -DVCPKG_TARGET_TRIPLET=arm64-osx
+      env:
+        # Ensure CMake uses correct Python
+        Python3_ROOT_DIR: /opt/homebrew/opt/python@3.12
 
     - name: Build
       run: cmake --build build --config ${{env.BUILD_TYPE}} -j$(sysctl -n hw.ncpu)
@@ -165,7 +175,7 @@ jobs:
         
         # Copy dylibs from vcpkg
         mkdir -p package/LumaSort-macos/lib
-        cp -r build/vcpkg_installed/*/lib/*.dylib package/LumaSort-macos/lib/ 2>/dev/null || true
+        find build/vcpkg_installed -name "*.dylib" -exec cp {} package/LumaSort-macos/lib/ \; 2>/dev/null || true
         
         # Create launcher script
         cat > package/LumaSort-macos/run.sh << 'EOF'
