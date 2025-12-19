@@ -131,83 +131,10 @@ jobs:
         path: LumaSort-windows-x64.zip
 
   # ============================================
-  # MACOS BUILD (Intel x64)
-  # Using macos-15-intel with CMake 3.x to work around glad vcpkg port
-  # which uses deprecated CMake 3.0 syntax incompatible with CMake 4.x
-  # ============================================
-  build-macos:
-    runs-on: macos-15-large
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Install system dependencies and pin CMake 3.x
-      run: |
-        # Unlink current CMake (4.x) and install CMake 3.31 for glad compatibility
-        brew unlink cmake || true
-        brew install cmake@3
-        brew link --force cmake@3
-        
-        # Install other dependencies
-        brew install ninja pkg-config autoconf automake libtool
-        
-        # Verify CMake version
-        cmake --version
-
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: 'c82f74667287d3dc386bce81e44964370c91a289'
-
-    - name: Configure CMake
-      run: |
-        cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DCMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake
-
-    - name: Build
-      run: cmake --build build --config ${{env.BUILD_TYPE}} -j$(sysctl -n hw.ncpu)
-
-    - name: Package macOS
-      run: |
-        mkdir -p package/LumaSort-macos
-        cp build/LumaSort package/LumaSort-macos/
-        
-        # Copy dylibs from vcpkg
-        mkdir -p package/LumaSort-macos/lib
-        find build/vcpkg_installed -name "*.dylib" -exec cp {} package/LumaSort-macos/lib/ \; 2>/dev/null || true
-        
-        # Create launcher script
-        cat > package/LumaSort-macos/run.sh << 'EOF'
-        #!/bin/bash
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        export DYLD_LIBRARY_PATH="$SCRIPT_DIR/lib:$DYLD_LIBRARY_PATH"
-        cd "$SCRIPT_DIR"
-        ./LumaSort "$@"
-        EOF
-        chmod +x package/LumaSort-macos/run.sh
-        
-        # Copy assets and docs
-        cp -r assets package/LumaSort-macos/
-        cp README.md LICENSE package/LumaSort-macos/
-        
-        # Create zip archive
-        cd package && zip -r ../LumaSort-macos-x64.zip LumaSort-macos
-
-    - name: Upload macOS Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: LumaSort-macos-x64
-        path: LumaSort-macos-x64.zip
-
-  # ============================================
   # CREATE GITHUB RELEASE
   # ============================================
   release:
-    needs: [build-linux, build-windows, build-macos]
+    needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     
@@ -223,7 +150,6 @@ jobs:
         files: |
           artifacts/LumaSort-linux-x86_64/LumaSort-linux-x86_64.tar.gz
           artifacts/LumaSort-windows-x64/LumaSort-windows-x64.zip
-          artifacts/LumaSort-macos-x64/LumaSort-macos-x64.zip
         draft: false
         prerelease: false
         generate_release_notes: true
