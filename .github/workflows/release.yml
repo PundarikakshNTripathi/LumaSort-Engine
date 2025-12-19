@@ -132,11 +132,11 @@ jobs:
 
   # ============================================
   # MACOS BUILD (Intel x64)
-  # Using macos-13 for CMake 3.x compatibility with glad vcpkg port
-  # The glad port uses deprecated CMake 3.0 syntax that fails on CMake 4.x
+  # Using macos-15-intel with CMake 3.x to work around glad vcpkg port
+  # which uses deprecated CMake 3.0 syntax incompatible with CMake 4.x
   # ============================================
   build-macos:
-    runs-on: macos-13
+    runs-on: macos-15-large
     
     steps:
     - name: Checkout code
@@ -144,9 +144,18 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install system dependencies
+    - name: Install system dependencies and pin CMake 3.x
       run: |
+        # Unlink current CMake (4.x) and install CMake 3.31 for glad compatibility
+        brew unlink cmake || true
+        brew install cmake@3
+        brew link --force cmake@3
+        
+        # Install other dependencies
         brew install ninja pkg-config autoconf automake libtool
+        
+        # Verify CMake version
+        cmake --version
 
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
