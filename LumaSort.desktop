@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LumaSort Engine
+Comment=Pixel Sorting Visualizer with Flow Fields
+Exec=LumaSort
+Icon=lumasort
+Terminal=false
+Categories=Graphics;AudioVideo;
+Keywords=pixel;sort;luminance;visualization;particles;
