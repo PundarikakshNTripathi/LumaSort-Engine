@@ -4,6 +4,17 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include "core/flow_field.h"
+/**
+ * @file app.cpp
+ * @brief Main application implementation for LumaSort Engine.
+ * 
+ * @note STB_IMAGE_IMPLEMENTATION must be defined in exactly one source file
+ *       before including stb_image.h to provide the function implementations.
+ */
+
+// STB Image - single-header image loading library (used for window icon)
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 App::App(const std::string& title, int width, int height)
     : m_Title(title), m_Width(width), m_Height(height) {
@@ -55,11 +66,60 @@ void App::init() {
         exit(1);
     }
 
+    /**
+     * @brief 5. Set Window Icon
+     * 
+     * Loads the application icon from PNG file and sets it for the window.
+     * The icon appears in the taskbar, Alt-Tab switcher, and window decorations.
+     * 
+     * Implementation details:
+     * - Uses stb_image to load the PNG file in RGBA format
+     * - Resizes to multiple sizes (256x256, 64x64, 32x32) using OpenCV for
+     *   compatibility across different UI contexts (taskbar vs title bar)
+     * - Large source images are supported - they are downscaled automatically
+     * 
+     * @note This addresses GitHub Issue #12: Add application icon and window metadata
+     * @note Title bar icon visibility depends on the window manager/desktop environment
+     * @warning Fails gracefully with a warning if the icon file cannot be loaded
+     */
+    {
+        int iconWidth, iconHeight, iconChannels;
+        unsigned char* iconPixels = stbi_load("assets/icons/LumaSort-Engine.png", 
+                                               &iconWidth, &iconHeight, &iconChannels, 4);
+        if (iconPixels) {
+            // Create OpenCV Mat from raw pixel data (RGBA format from stb_image)
+            cv::Mat iconMat(iconHeight, iconWidth, CV_8UC4, iconPixels);
+            
+            // Create multiple icon sizes for different contexts
+            // (taskbar, title bar, Alt-Tab may use different sizes)
+            cv::Mat icon256, icon64, icon32;
+            cv::resize(iconMat, icon256, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
+            cv::resize(iconMat, icon64, cv::Size(64, 64), 0, 0, cv::INTER_AREA);
+            cv::resize(iconMat, icon32, cv::Size(32, 32), 0, 0, cv::INTER_AREA);
+            
+            // Ensure continuous memory layout for GLFW
+            icon256 = icon256.clone();
+            icon64 = icon64.clone();
+            icon32 = icon32.clone();
+            
+            GLFWimage icons[3];
+            icons[0].width = 256; icons[0].height = 256; icons[0].pixels = icon256.data;
+            icons[1].width = 64;  icons[1].height = 64;  icons[1].pixels = icon64.data;
+            icons[2].width = 32;  icons[2].height = 32;  icons[2].pixels = icon32.data;
+            
+            glfwSetWindowIcon(m_Window, 3, icons);
+            
+            stbi_image_free(iconPixels);
+        } else {
+            std::cerr << "Warning: Could not load application icon from assets/icons/LumaSort-Engine.png" << std::endl;
+        }
+    }
+
     // Make the window's context current on this thread
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(1); // Enable vsync to prevent tearing
 
-    // 5. Initialize GLAD
+    // 6. Initialize GLAD
     // Important: Must be done after making the context current.
     // GLAD loads the actual OpenGL function pointers from the driver.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -67,11 +127,11 @@ void App::init() {
         exit(1);
     }
 
-    // 6. Initialize Sub-systems
+    // 7. Initialize Sub-systems
     // Renderer needs OpenGL context, so it comes after GLAD.
     m_Renderer = std::make_unique<Graphics::Renderer>();
 
-    // 7. Setup Dear ImGui
+    // 8. Setup Dear ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
