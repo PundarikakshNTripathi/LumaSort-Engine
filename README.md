@@ -48,6 +48,7 @@ The engine features a complete GUI control panel with native file dialogs, real-
 - **Real-time Visualization**: High-performance sorting at 60+ FPS
 - **Physics Parameter Tuning**: Adjust particle speed, flow strength, and noise scale in real-time
 - **Fluid Dynamics**: Pixels move organically using Flow Fields (Perlin/Simplex Noise)
+- **Custom Branding**: Application icon in taskbar and Alt-Tab switcher
 
 ---
 
@@ -140,6 +141,7 @@ graph TD
 lumasort-engine/
 ├── vcpkg.json              # Dependency Manifest (OpenCV, ImGui, NFD, etc.)
 ├── CMakeLists.txt          # Build Configuration
+├── LumaSort.desktop        # Linux Desktop Entry (for app launchers)
 ├── src/
 │   ├── main.cpp            # Entry Point
 │   ├── app.h/cpp           # Application Loop, State, & Transform Logic
@@ -154,6 +156,7 @@ lumasort-engine/
 │   └── ui/
 │       └── gui_layer.h/cpp # ImGui Control Panel & Native File Dialogs
 ├── assets/
+│   ├── icons/              # Application Icons
 │   ├── shaders/            # GLSL Vertex & Fragment Shaders
 │   └── images/             # Sample Images
 └── build/                  # (Generated) Build artifacts
