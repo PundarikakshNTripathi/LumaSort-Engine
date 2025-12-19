@@ -470,3 +470,29 @@ void App::stopTransform() {
     m_Time = 0.0f;
     std::cout << "Transform stopped" << std::endl;
 }
+
+void App::setInputMode(InputMode mode) {
+    // Don't do anything if mode hasn't changed
+    if (mode == m_InputMode) return;
+    
+    // Stop any active transformation first
+    if (m_IsTransforming) {
+        stopTransform();
+    }
+    
+    // Clear particle system - forces complete rebuild on next update()
+    // This ensures old particles from previous mode don't persist
+    m_Particles.clear();
+    
+    // Reset simulation dimensions - will be recalculated based on new input
+    m_SimulationWidth = 256;  // Default value, will be updated by new input
+    m_SimulationHeight = 256;
+    
+    // Clear frozen frame (no longer relevant to new mode)
+    m_FrozenFrame.release();
+    
+    // Switch to new mode
+    m_InputMode = mode;
+    
+    std::cout << "Switched to input mode: " << static_cast<int>(mode) << std::endl;
+}
