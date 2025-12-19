@@ -172,6 +172,23 @@ void App::run() {
 }
 
 void App::render() {
+    /**
+     * @brief Update viewport to match current framebuffer size.
+     * 
+     * This is critical for handling window resize/maximize. GLFW's framebuffer
+     * size may differ from window size on high-DPI displays. We query it each
+     * frame to ensure rendering always matches the actual pixel dimensions.
+     * 
+     * @note Fixes GitHub Issue #13: Viewport doesn't update on window resize
+     */
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(m_Window, &fbWidth, &fbHeight);
+    if (fbWidth > 0 && fbHeight > 0) {
+        m_Width = fbWidth;
+        m_Height = fbHeight;
+        glViewport(0, 0, m_Width, m_Height);
+    }
+
     // 1. Clear the screen
     m_Renderer->clear();
 
@@ -230,11 +247,16 @@ void App::update() {
     if (m_Particles.size() != numParticles) {
         m_Particles.clear();
         m_Particles.reserve(numParticles);
-        float maxDim = (float)(m_SimulationWidth - 1);
+        
+        // Use separate divisors for X and Y to preserve aspect ratio
+        // This fixes GitHub Issue #13: Aspect ratio distortion
+        float maxDimX = (float)(m_SimulationWidth - 1);
+        float maxDimY = (float)(m_SimulationHeight - 1);
+        
         for (int y = 0; y < m_SimulationHeight; ++y) {
             for (int x = 0; x < m_SimulationWidth; ++x) {
                 Particle p;
-                p.pos = glm::vec2(x / maxDim, y / maxDim); 
+                p.pos = glm::vec2(x / maxDimX, y / maxDimY); 
                 p.vel = glm::vec2(0.0f);
                 p.acc = glm::vec2(0.0f);
                 p.target = p.pos;
@@ -282,11 +304,13 @@ void App::update() {
         }
     } else {
         // When not transforming, keep particles at their source grid positions
-        float maxDim = (float)(m_SimulationWidth - 1);
-        for (int i = 0; i < m_Particles.size(); ++i) {
+        // Use separate divisors for X and Y to preserve aspect ratio (Issue #13)
+        float maxDimX = (float)(m_SimulationWidth - 1);
+        float maxDimY = (float)(m_SimulationHeight - 1);
+        for (size_t i = 0; i < m_Particles.size(); ++i) {
             int x = i % m_SimulationWidth;
             int y = i / m_SimulationWidth;
-            m_Particles[i].pos = glm::vec2(x / maxDim, y / maxDim);
+            m_Particles[i].pos = glm::vec2(x / maxDimX, y / maxDimY);
             m_Particles[i].vel = glm::vec2(0.0f);
             m_Particles[i].acc = glm::vec2(0.0f);
         }

@@ -45,6 +45,7 @@ The engine features a complete GUI control panel with native file dialogs, real-
 - **Interactive Canvas**: Draw with VIBGYOR color palette, adjustable brush sizes, and eraser tool
 - **Transform Control**: Start/Stop transformation with dedicated button - preview content before animating
 - **Adaptive Resolution**: Automatically adjusts particle count based on source image resolution
+- **Responsive Viewport**: Dynamic scaling on window resize with aspect ratio preservation
 - **Real-time Visualization**: High-performance sorting at 60+ FPS
 - **Physics Parameter Tuning**: Adjust particle speed, flow strength, and noise scale in real-time
 - **Fluid Dynamics**: Pixels move organically using Flow Fields (Perlin/Simplex Noise)
