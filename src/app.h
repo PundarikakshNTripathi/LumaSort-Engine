@@ -73,6 +73,22 @@ public:
     void loadTargetImage(const std::string& path);
 
     /**
+     * @brief Changes the input mode and resets all simulation state.
+     * 
+     * This method should be used instead of directly setting m_InputMode
+     * to ensure proper cleanup when switching between Webcam/Image/Canvas.
+     * 
+     * Actions performed:
+     * - Stops any active transformation
+     * - Clears particle system (forces rebuild on next update)
+     * - Resets simulation dimensions
+     * 
+     * @param mode The new input mode to switch to.
+     * @note Addresses GitHub Issue #10: Physics simulation persists on mode switch
+     */
+    void setInputMode(InputMode mode);
+
+    /**
      * @brief Clears the drawing canvas.
      */
     void clearCanvas();

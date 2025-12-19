@@ -35,7 +35,9 @@ namespace UI {
         const char* items[] = { "Webcam", "Image", "Canvas" };
         int currentItem = static_cast<int>(app->m_InputMode);
         if (ImGui::Combo("Input Mode", &currentItem, items, 3)) {
-            app->m_InputMode = static_cast<InputMode>(currentItem);
+            // Use setInputMode() to properly reset state when switching modes
+            // This stops active transformations and clears particles (Issue #10)
+            app->setInputMode(static_cast<InputMode>(currentItem));
         }
 
         if (app->m_InputMode == InputMode::IMAGE) {
