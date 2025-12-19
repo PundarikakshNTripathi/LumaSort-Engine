@@ -167,7 +167,7 @@ lumasort-engine/
 
 ## Download & Run
 
-Pre-built releases are available for **Windows** and **Linux**. No compilation required!
+Pre-built releases are available for **Windows**, **Linux**, and **macOS**. No compilation required!
 
 ### 📥 Download
 
@@ -190,6 +190,18 @@ cd LumaSort-linux
 ```
 
 > **Note:** The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
+
+### 🍎 macOS (Apple Silicon)
+
+1. Download `LumaSort-macos-arm64.zip`
+2. Extract and run:
+```bash
+unzip LumaSort-macos-arm64.zip
+cd LumaSort-macos
+./run.sh
+```
+
+> **Note:** If you see "cannot be opened because the developer cannot be verified", right-click the executable and select "Open" to bypass Gatekeeper.
 
 ---
 
