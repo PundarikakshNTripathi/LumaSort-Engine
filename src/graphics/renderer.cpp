@@ -101,15 +101,15 @@ namespace Graphics {
     }
 
     /**
-     * @brief Renders particles as points with dynamic sizing to prevent gaps.
+     * @brief Renders particles as points with dynamic sizing and aspect ratio preservation.
      * 
-     * This function calculates the optimal point size based on the ratio between
-     * viewport dimensions and simulation grid dimensions. A 1.5x multiplier ensures
-     * particles overlap slightly, preventing visible gaps between adjacent particles.
+     * This function calculates the optimal point size and scale factors to:
+     * 1. Ensure particles fill the viewport without gaps (Issue #8)
+     * 2. Preserve source image aspect ratio via letterboxing (Issue #13)
      * 
-     * This addresses GitHub Issue #8: On integrated graphics (Intel HD), fixed point
-     * sizes cause visible vertical black lines when viewport/simulation ratio exceeds
-     * the point size.
+     * The rendering uses the smaller of the two scale factors (min(scaleX, scaleY))
+     * to ensure content fits within the viewport while maintaining proportions.
+     * This may result in black bars (letterboxing) on wider/taller viewports.
      * 
      * @param particles Vector of particles to render.
      * @param viewportWidth Current viewport width in pixels.
@@ -117,24 +117,33 @@ namespace Graphics {
      * @param simWidth Simulation grid width (number of particles horizontally).
      * @param simHeight Simulation grid height (number of particles vertically).
      * 
-     * @note Point size formula: max(viewportWidth/simWidth, viewportHeight/simHeight) * 1.5
-     * @note Minimum point size is clamped to 1.0 to ensure visibility.
+     * @note Passes uScale uniform to shader for aspect-ratio-preserving positioning
+     * @note Point size uses 1.5x overlap factor to prevent visible gaps
+     * @note Addresses GitHub Issues #8 (stride artifacts) and #13 (aspect ratio)
      */
     void Renderer::renderParticles(const std::vector<Particle>& particles, int viewportWidth, int viewportHeight, int simWidth, int simHeight) {
         if (particles.empty()) return;
 
         glUseProgram(m_ParticleShader);
         
-        // Calculate point size to ensure particles fill the viewport without gaps.
-        // The 1.5x multiplier creates deliberate overlap to prevent visible stride artifacts.
-        float pointSizeX = (float)viewportWidth / (float)simWidth * 1.5f;
-        float pointSizeY = (float)viewportHeight / (float)simHeight * 1.5f;
-        float pointSize = std::max(pointSizeX, pointSizeY);
+        // Calculate scale factors for aspect-ratio-preserving rendering (letterboxing)
+        // Use min of scale factors to ensure content fits within viewport
+        float scaleX = (float)viewportWidth / (float)simWidth;
+        float scaleY = (float)viewportHeight / (float)simHeight;
+        float scaleFactor = std::min(scaleX, scaleY);
+        
+        // Calculate NDC scale (how much of -1..1 range to use)
+        // If viewport is wider than simulation, we use less X range (and vice versa)
+        float ndcScaleX = (scaleFactor * simWidth) / viewportWidth;
+        float ndcScaleY = (scaleFactor * simHeight) / viewportHeight;
+        
+        // Point size based on uniform scale factor with overlap
+        float pointSize = scaleFactor * 1.5f;
         pointSize = std::max(pointSize, 1.0f);  // Clamp to minimum 1.0
         
-        // Pass dynamic point size to vertex shader via uniform
-        int pointSizeLoc = glGetUniformLocation(m_ParticleShader, "uPointSize");
-        glUniform1f(pointSizeLoc, pointSize);
+        // Pass uniforms to shader
+        glUniform1f(glGetUniformLocation(m_ParticleShader, "uPointSize"), pointSize);
+        glUniform2f(glGetUniformLocation(m_ParticleShader, "uScale"), ndcScaleX, ndcScaleY);
         
         glBindVertexArray(m_ParticleVAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_ParticleVBO);
