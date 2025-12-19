@@ -34,6 +34,7 @@ The engine features a complete GUI control panel with native file dialogs, real-
 - [Build from Source](#build-from-source)
 - [Usage Guide](#usage-guide)
 - [Troubleshooting](#troubleshooting)
+- [Known Limitations & Future Work](#known-limitations--future-work)
 - [License](#license)
 
 ---
@@ -167,7 +168,7 @@ lumasort-engine/
 
 ## Download & Run
 
-Pre-built releases are available for **Windows**, **Linux**, and **macOS**. No compilation required!
+Pre-built releases are available for **Windows** and **Linux**. No compilation required!
 
 ### 📥 Download
 
@@ -191,19 +192,11 @@ cd LumaSort-linux
 
 > **Note:** The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
 
-### 🍎 macOS (Intel x64)
+### 🍎 macOS
 
-1. Download `LumaSort-macos-x64.zip`
-2. Extract and run:
-```bash
-unzip LumaSort-macos-x64.zip
-cd LumaSort-macos
-./run.sh
-```
+macOS pre-built binaries are not available in this release due to CI infrastructure limitations. **macOS users can build from source** - see [Build from Source](#build-from-source) below.
 
-> **Note:** If you see "cannot be opened because the developer cannot be verified", right-click the executable and select "Open" to bypass Gatekeeper.
-> 
-> **Apple Silicon Users:** The Intel build runs via Rosetta 2 on M1/M2 Macs. Native ARM64 support coming soon.
+> **Future Work:** Native macOS builds (Intel and Apple Silicon) will be added when the vcpkg glad port is updated for CMake 4.x compatibility.
 
 ---
 
@@ -317,6 +310,25 @@ sudo apt install build-essential ninja-build
 ### Vertical black lines on Intel HD graphics
 **Cause:** Fixed point size rendering causes gaps between particles on certain GPU/resolution combinations.
 **Status:** Fixed in v1.0.1. If you see this issue, ensure you're running the latest version.
+
+---
+
+## Known Limitations & Future Work
+
+### 🍎 macOS Builds Not Available
+
+**Why:** GitHub Actions free tier macOS runners (macos-14/15) come with CMake 4.x, which is incompatible with the `glad` vcpkg port that uses deprecated CMake 3.0 syntax. Paid Intel runners would work but aren't available on the free tier.
+
+**Workaround:** macOS users can [build from source](#build-from-source) - the project builds successfully on macOS with Homebrew dependencies.
+
+### 🔮 Future Work
+
+| Priority | Feature | Status |
+|----------|---------|--------|
+| High | Native macOS builds (Intel + Apple Silicon) | Waiting for vcpkg glad fix |
+| Medium | GPU-accelerated particle physics (compute shaders) | Planned |
+| Medium | Video export functionality | Planned |
+| Low | Custom flow field patterns | Planned |
 
 ---
 
