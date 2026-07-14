@@ -104,8 +104,8 @@ namespace Graphics {
      * @brief Renders particles as points with dynamic sizing and aspect ratio preservation.
      * 
      * This function calculates the optimal point size and scale factors to:
-     * 1. Ensure particles fill the viewport without gaps (Issue #8)
-     * 2. Preserve source image aspect ratio via letterboxing (Issue #13)
+     * 1. Ensure particles fill the viewport without gaps.
+     * 2. Preserve source image aspect ratio via letterboxing.
      * 
      * The rendering uses the smaller of the two scale factors (min(scaleX, scaleY))
      * to ensure content fits within the viewport while maintaining proportions.

@@ -70,17 +70,6 @@ void App::init() {
      * @brief 5. Set Window Icon
      * 
      * Loads the application icon from PNG file and sets it for the window.
-     * The icon appears in the taskbar, Alt-Tab switcher, and window decorations.
-     * 
-     * Implementation details:
-     * - Uses stb_image to load the PNG file in RGBA format
-     * - Resizes to multiple sizes (256x256, 64x64, 32x32) using OpenCV for
-     *   compatibility across different UI contexts (taskbar vs title bar)
-     * - Large source images are supported - they are downscaled automatically
-     * 
-     * @note This addresses GitHub Issue #12: Add application icon and window metadata
-     * @note Title bar icon visibility depends on the window manager/desktop environment
-     * @warning Fails gracefully with a warning if the icon file cannot be loaded
      */
     {
         int iconWidth, iconHeight, iconChannels;
@@ -174,12 +163,6 @@ void App::run() {
 void App::render() {
     /**
      * @brief Update viewport to match current framebuffer size.
-     * 
-     * This is critical for handling window resize/maximize. GLFW's framebuffer
-     * size may differ from window size on high-DPI displays. We query it each
-     * frame to ensure rendering always matches the actual pixel dimensions.
-     * 
-     * @note Fixes GitHub Issue #13: Viewport doesn't update on window resize
      */
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(m_Window, &fbWidth, &fbHeight);
@@ -249,7 +232,6 @@ void App::update() {
         m_Particles.reserve(numParticles);
         
         // Use separate divisors for X and Y to preserve aspect ratio
-        // This fixes GitHub Issue #13: Aspect ratio distortion
         float maxDimX = (float)(m_SimulationWidth - 1);
         float maxDimY = (float)(m_SimulationHeight - 1);
         
@@ -304,7 +286,7 @@ void App::update() {
         }
     } else {
         // When not transforming, keep particles at their source grid positions
-        // Use separate divisors for X and Y to preserve aspect ratio (Issue #13)
+        // Use separate divisors for X and Y to preserve aspect ratio
         float maxDimX = (float)(m_SimulationWidth - 1);
         float maxDimY = (float)(m_SimulationHeight - 1);
         for (size_t i = 0; i < m_Particles.size(); ++i) {

@@ -84,7 +84,6 @@ public:
      * - Resets simulation dimensions
      * 
      * @param mode The new input mode to switch to.
-     * @note Addresses GitHub Issue #10: Physics simulation persists on mode switch
      */
     void setInputMode(InputMode mode);
 

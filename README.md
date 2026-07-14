@@ -1,7 +1,7 @@
 # LumaSort Engine
 
 > **Copyright (c) 2025**  
-> This project is licensed under the **CC BY-NC-ND 4.0** license.  
+> This project is licensed under the **Elastic License 2.0**.  
 > See the [LICENSE](LICENSE) file for details.
 
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -170,17 +170,17 @@ lumasort-engine/
 
 Pre-built releases are available for **Windows** and **Linux**. No compilation required!
 
-### 📥 Download
+### Download
 
 Go to the [**Releases Page**](https://github.com/PundarikakshNTripathi/LumaSort-Engine/releases) and download the latest version for your OS.
 
-### 🪟 Windows
+### Windows
 
 1. Download `LumaSort-windows-x64.zip`
 2. Extract the ZIP file
 3. Double-click `LumaSort.exe` to run
 
-### 🐧 Linux
+### Linux
 
 1. Download `LumaSort-linux-x86_64.tar.gz`
 2. Extract and run:
@@ -192,7 +192,7 @@ cd LumaSort-linux
 
 > **Note:** The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
 
-### 🍎 macOS
+### macOS
 
 macOS pre-built binaries are not available in this release due to CI infrastructure limitations. **macOS users can build from source** - see [Build from Source](#build-from-source) below.
 
@@ -315,13 +315,13 @@ sudo apt install build-essential ninja-build
 
 ## Known Limitations & Future Work
 
-### 🍎 macOS Builds Not Available
+### macOS Builds Not Available
 
 **Why:** GitHub Actions free tier macOS runners (macos-14/15) come with CMake 4.x, which is incompatible with the `glad` vcpkg port that uses deprecated CMake 3.0 syntax. Paid Intel runners would work but aren't available on the free tier.
 
 **Workaround:** macOS users can [build from source](#build-from-source) - the project builds successfully on macOS with Homebrew dependencies.
 
-### 🔮 Future Work
+### Future Work
 
 | Priority | Feature | Status |
 |----------|---------|--------|
@@ -334,16 +334,15 @@ sudo apt install build-essential ninja-build
 
 ## License
 
-This project is distributed under the **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International** license.
+This project is distributed under the **Elastic License 2.0**.
 
 **What this means:**
 
-✅ You can view and use this code for learning  
-✅ You can share this project with attribution  
-❌ You cannot use this commercially  
-❌ You cannot create modified versions  
++ You can use, copy, distribute, make available, and prepare derivative works of the software.
+- You may not provide the software to third parties as a hosted or managed service.
+- You may not move, change, disable, or circumvent the license key functionality.
 
 See [LICENSE](LICENSE) for the full legal text.
 
 ---
-*Built with ❤️ using C++20, OpenGL, Dear ImGui, OpenCV, NFD, and vcpkg.*
+*Built with love using C++20, OpenGL, Dear ImGui, OpenCV, NFD, and vcpkg.*

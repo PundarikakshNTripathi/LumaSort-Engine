@@ -36,7 +36,7 @@ namespace UI {
         int currentItem = static_cast<int>(app->m_InputMode);
         if (ImGui::Combo("Input Mode", &currentItem, items, 3)) {
             // Use setInputMode() to properly reset state when switching modes
-            // This stops active transformations and clears particles (Issue #10)
+            // This stops active transformations and clears particles
             app->setInputMode(static_cast<InputMode>(currentItem));
         }
 

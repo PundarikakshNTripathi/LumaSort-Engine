@@ -51,7 +51,4 @@ vcpkg.json.lock
 *.swp
 
 # Project Specific
-context.md
-task.md
-project_guide.md
 imgui.ini

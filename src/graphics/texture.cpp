@@ -42,7 +42,7 @@ void Texture2D::bind(unsigned int unit) const {
  * 
  * @param mat The source OpenCV matrix (supports 1, 3, or 4 channel images).
  * 
- * @note Addresses GitHub Issue #8: Vertical black stride artifacts on input feed.
+ *
  * @warning Empty matrices are rejected with an error message.
  * 
  * @see https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_upload_and_pixel_reads
