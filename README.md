@@ -343,6 +343,3 @@ This project is distributed under the **Elastic License 2.0**.
 - You may not move, change, disable, or circumvent the license key functionality.
 
 See [LICENSE](LICENSE) for the full legal text.
-
----
-*Built with love using C++20, OpenGL, Dear ImGui, OpenCV, NFD, and vcpkg.*
