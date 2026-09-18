@@ -1,0 +1,91 @@
+direction: down
+
+# Global Cream Background
+style.fill: "#fffdd0"
+style.stroke: transparent
+
+classes: {
+  layer: {
+    style: {
+      fill: transparent
+      stroke: "#808080"
+      stroke-width: 2
+      border-radius: 8
+      stroke-dash: 5
+    }
+  }
+  core_node: {
+    shape: rectangle
+    style: {
+      fill: "#f8e9a1"
+      border-radius: 5
+      shadow: true
+    }
+  }
+  sys_node: {
+    shape: rectangle
+    style: {
+      fill: "#a8d0e6"
+      border-radius: 5
+      shadow: true
+    }
+  }
+  dep_node: {
+    shape: package
+    style: {
+      fill: "#e0e0e0"
+      border-radius: 5
+      shadow: true
+    }
+  }
+}
+
+"Core": {
+  class: layer
+  direction: down
+  
+  "Main Entry": { class: core_node }
+  "App Loop": { class: core_node; style.fill: "#ffccb6" }
+  
+  "Main Entry" -> "App Loop"
+}
+
+"Sub-systems": {
+  class: layer
+  grid-columns: 3
+  
+  "GuiLayer (ImGui + NFD)": { class: sys_node; style.fill: "#b5e7a0" }
+  "Renderer (OpenGL)": { class: sys_node; style.fill: "#ffccb6" }
+  "Sorter": { class: sys_node; style.fill: "#a8d0e6" }
+  "FlowField": { class: sys_node; style.fill: "#d5c6e0" }
+  "Inputs (Webcam/Image/Canvas)": { class: sys_node; style.fill: "#f8e9a1" }
+}
+
+"Dependencies": {
+  class: layer
+  grid-columns: 4
+  
+  "GLFW Window": { class: dep_node }
+  "OpenCV": { class: dep_node }
+  "OpenGL Texture": { class: dep_node }
+  "Native File Dialog": { class: dep_node }
+}
+
+# Connections
+"Core"."App Loop" -> "Sub-systems"."Inputs (Webcam/Image/Canvas)": Updates
+"Core"."App Loop" -> "Sub-systems"."Sorter": Updates
+"Core"."App Loop" -> "Sub-systems"."FlowField": Updates
+"Core"."App Loop" -> "Sub-systems"."Renderer (OpenGL)": Renders { style.animated: true }
+"Core"."App Loop" -> "Sub-systems"."GuiLayer (ImGui + NFD)": Renders
+
+"Sub-systems"."Inputs (Webcam/Image/Canvas)" -> "Sub-systems"."Sorter": Frame Data { style.animated: true }
+"Sub-systems"."Inputs (Webcam/Image/Canvas)" -> "Dependencies"."OpenGL Texture": Drawing
+"Sub-systems"."Sorter" -> "Core"."App Loop": Target Mappings { style.animated: true }
+"Core"."App Loop" -> "Sub-systems"."Renderer (OpenGL)": Particles { style.animated: true }
+"Sub-systems"."FlowField" -> "Core"."App Loop": Forces { style.animated: true }
+
+"Sub-systems"."GuiLayer (ImGui + NFD)" -> "Dependencies"."Native File Dialog": File Selection
+"Sub-systems"."GuiLayer (ImGui + NFD)" -> "Sub-systems"."Sorter": Controls { style.stroke-dash: 5 }
+"Sub-systems"."GuiLayer (ImGui + NFD)" -> "Sub-systems"."Renderer (OpenGL)": Controls { style.stroke-dash: 5 }
+"Sub-systems"."GuiLayer (ImGui + NFD)" -> "Sub-systems"."Inputs (Webcam/Image/Canvas)": Controls { style.stroke-dash: 5 }
+"Sub-systems"."GuiLayer (ImGui + NFD)" -> "Core"."App Loop": Transform { style.stroke-dash: 5 }

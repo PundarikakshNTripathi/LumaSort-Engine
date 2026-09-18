@@ -72,52 +72,7 @@ The engine features a complete GUI control panel with native file dialogs, real-
 
 The engine follows a strict separation of concerns with a complete GUI layer for user interaction.
 
-```mermaid
-graph TD
-    subgraph Core
-        App["App Loop"]
-        Main["Main Entry"] --> App
-    end
-
-    subgraph "Sub-systems"
-        UI["GuiLayer (ImGui + NFD)"]
-        Gfx["Renderer (OpenGL)"]
-        Sorter["Sorter"]
-        Flow["FlowField"]
-        Input["Inputs (Webcam/Image/Canvas)"]
-    end
-
-    subgraph Dependencies
-        GLFW["GLFW Window"]
-        CV["OpenCV"]
-        GL["OpenGL Texture"]
-        NFD["Native File Dialog"]
-    end
-
-    App -->|Updates| Input
-    App -->|Updates| Sorter
-    App -->|Updates| Flow
-    App -->|Renders| Gfx
-    App -->|Renders| UI
-    
-    Input -->|Frame Data| Sorter
-    Input -->|Drawing| GL
-    Sorter -->|Target Mappings| App
-    App -->|Particles| Gfx
-    Flow -->|Forces| App
-    
-    UI -->|File Selection| NFD
-    UI -- Controls --> Sorter
-    UI -- Controls --> Gfx
-    UI -- Controls --> Input
-    UI -- Transform --> App
-    
-    style App fill:#f9f,stroke:#333,color:#000
-    style Sorter fill:#9cf,stroke:#333,color:#000
-    style Gfx fill:#9f9,stroke:#333,color:#000
-    style Flow fill:#c9f,stroke:#333,color:#000
-    style UI fill:#ff9,stroke:#333,color:#000
-```
+![Architecture Diagram](assets/images/architecture.svg)
 
 ---
 
