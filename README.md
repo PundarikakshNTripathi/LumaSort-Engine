@@ -1,17 +1,29 @@
-# LumaSort Engine
+<div align="center">
+  <img src="assets/icons/lumasort-logo.svg" alt="LumaSort Engine Logo" width="128">
+  <h1>LumaSort-Engine</h1>
+  <p>Turn any source media (image, webcam feed, drawing) into any target image through global luminance-based optimal transport.</p>
 
-> **Copyright (c) 2025**  
+  <p>
+    <a href="https://github.com/PundarikakshNTripathi/LumaSort-Engine/actions"><img src="https://img.shields.io/badge/Build-Passing-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white" alt="Build Status"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-D22128?style=for-the-badge&logo=apache&logoColor=white" alt="Apache 2.0 License"></a>
+    <a href="https://github.com/PundarikakshNTripathi/LumaSort-Engine/releases"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue?style=for-the-badge&logo=linux&logoColor=white" alt="Platform Support"></a>
+  </p>
+
+  <p>
+    <a href="https://en.cppreference.com/w/cpp/20"><img src="https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="C++20"></a>
+    <a href="https://www.opengl.org/"><img src="https://img.shields.io/badge/OpenGL-3.3%20Core-5586A4?style=for-the-badge&logo=opengl&logoColor=white" alt="OpenGL 3.3 Core"></a>
+    <a href="https://github.com/ocornut/imgui"><img src="https://img.shields.io/badge/Dear_ImGui-Docking-7C3AED?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="Dear ImGui Docking"></a>
+    <a href="https://opencv.org/"><img src="https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV 4.x"></a>
+    <a href="https://github.com/btzy/nativefiledialog-extended"><img src="https://img.shields.io/badge/NFD-Extended-4A90A4?style=for-the-badge" alt="NFD Extended"></a>
+    <a href="https://cmake.org/"><img src="https://img.shields.io/badge/CMake-3.20%2B-064F8C?style=for-the-badge&logo=cmake&logoColor=white" alt="CMake 3.20+"></a>
+    <a href="https://vcpkg.io/"><img src="https://img.shields.io/badge/vcpkg-Manifest%20Mode-5C2D91?style=for-the-badge&logo=vcpkg&logoColor=white" alt="vcpkg Manifest Mode"></a>
+  </p>
+</div>
+
+> [!Note]
+> **Copyright (c) 2025-2026 Pundarikaksh Narayan Tripathi**  
 > This project is licensed under the **Apache License 2.0**.  
 > See the [LICENSE](LICENSE) file for details.
-
-[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![OpenGL](https://img.shields.io/badge/OpenGL-3.3-FFFFFF?style=for-the-badge&logo=opengl)](https://www.opengl.org/)
-[![Dear ImGui](https://img.shields.io/badge/Dear_ImGui-Docking-880000?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://github.com/ocornut/imgui)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![NFD](https://img.shields.io/badge/NFD-Extended-4A90A4?style=for-the-badge&logo=files&logoColor=white)](https://github.com/btzy/nativefiledialog-extended)
-[![CMake](https://img.shields.io/badge/CMake-Build-064F8C?style=for-the-badge&logo=cmake&logoColor=white)](https://cmake.org/)
-[![vcpkg](https://img.shields.io/badge/vcpkg-Manifest-purple?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://vcpkg.io/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
 
 <p align="center">
   <img src="assets/images/lumasort_bocchi_kita.gif" alt="LumaSort Bocchi to Kita Pixel Sorting Demo" width="640" />
@@ -156,12 +168,14 @@ cd LumaSort-linux
 ./run.sh
 ```
 
-> **Note:** The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
+> [!Note]
+> The `run.sh` script sets up the library paths automatically. Always use it to launch the application.
 
 ### macOS
 
 macOS pre-built binaries are not available in this release due to CI infrastructure limitations. **macOS users can build from source** - see [Build from Source](#build-from-source) below.
 
+> [!Note]
 > **Future Work:** Native macOS builds (Intel and Apple Silicon) will be added when the vcpkg glad port is updated for CMake 4.x compatibility.
 
 ---
@@ -192,7 +206,7 @@ sudo apt update && sudo apt install -y build-essential pkg-config cmake ninja-bu
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/your-username/LumaSort-Engine.git
+    git clone https://github.com/PundarikakshNTripathi/LumaSort-Engine.git
     cd LumaSort-Engine
     ```
 
