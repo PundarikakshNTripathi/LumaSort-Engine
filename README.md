@@ -29,7 +29,7 @@ The engine features a complete GUI control panel with native file dialogs, real-
 
 This project was inspired by **Spu7Nix's Obama turning app** in his video: [I made a program that turns anything into Obama](https://youtu.be/MeFi68a2pP8?si=WczfFm_GjwLiYxr6), which I stumbled upon last year. Back then, I couldn't find the source code repository anywhere online, but thought the concept was super cool and wanted to try building it myself. So I ended up reverse-engineering it on my own from scratch in modern C++.
 
-While inspired by the original video, LumaSort is a bit different: it lets you turn any image into any other image, hooks into live webcam feeds, and supports interactive real-time canvas drawing. I originally planned to record a video about the project and how it works, but got lazy and ended up never getting around to making it—so here is the engine and code for anyone to explore!
+While inspired by the original video, LumaSort is a bit different: it lets you turn any image into any other image, hooks into live webcam feeds, and supports interactive real-time canvas drawing. I originally planned to record a video about the project and how it works, but got lazy and ended up never getting around to making it; so here is the engine and code for anyone to explore!
 
 ---
 
