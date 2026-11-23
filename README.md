@@ -1,7 +1,7 @@
 # LumaSort Engine
 
 > **Copyright (c) 2025**  
-> This project is licensed under the **Elastic License 2.0**.  
+> This project is licensed under the **Apache License 2.0**.  
 > See the [LICENSE](LICENSE) file for details.
 
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -11,6 +11,7 @@
 [![NFD](https://img.shields.io/badge/NFD-Extended-4A90A4?style=for-the-badge&logo=files&logoColor=white)](https://github.com/btzy/nativefiledialog-extended)
 [![CMake](https://img.shields.io/badge/CMake-Build-064F8C?style=for-the-badge&logo=cmake&logoColor=white)](https://cmake.org/)
 [![vcpkg](https://img.shields.io/badge/vcpkg-Manifest-purple?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://vcpkg.io/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
 
 <p align="center">
   <img src="assets/images/lumasort_bocchi_kita.gif" alt="LumaSort Bocchi to Kita Pixel Sorting Demo" width="640" />
@@ -299,12 +300,12 @@ sudo apt install build-essential ninja-build
 
 ## License
 
-This project is distributed under the **Elastic License 2.0**.
+This project is licensed under the **Apache License 2.0**.
 
 **What this means:**
 
-+ You can use, copy, distribute, make available, and prepare derivative works of the software.
-- You may not provide the software to third parties as a hosted or managed service.
-- You may not move, change, disable, or circumvent the license key functionality.
+- You are free to use, modify, distribute, and sell this software for personal or commercial purposes.
+- You must include the original copyright notice and Apache 2.0 license in any distribution.
+- Derivative works may be distributed under different terms, provided attribution is maintained.
 
 See [LICENSE](LICENSE) for the full legal text.
