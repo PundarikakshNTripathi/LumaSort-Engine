@@ -12,6 +12,10 @@
 [![CMake](https://img.shields.io/badge/CMake-Build-064F8C?style=for-the-badge&logo=cmake&logoColor=white)](https://cmake.org/)
 [![vcpkg](https://img.shields.io/badge/vcpkg-Manifest-purple?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://vcpkg.io/)
 
+<p align="center">
+  <img src="assets/images/lumasort_bocchi_kita.gif" alt="LumaSort Bocchi to Kita Pixel Sorting Demo" width="640" />
+</p>
+
 ---
 
 ## Introduction
@@ -19,6 +23,12 @@
 **LumaSort Engine** is a high-performance C++20 real-time visualizer that rearranges pixels from live video feeds, static images, or real-time drawings into a target image based on global luminance intensity. By combining a "Pixel Sorting" algorithm with Fluid Dynamics (Flow Fields), it creates a mesmerizing, fluid-like transition of pixels finding their new "home" based on brightness.
 
 The engine features a complete GUI control panel with native file dialogs, real-time physics parameter tuning, and an interactive canvas with VIBGYOR color palette for drawing. Users can load source and target images, adjust particle behavior, and watch the transformation unfold with a single button click.
+
+### Inspiration & Backstory
+
+This project was inspired by **Spu7Nix's Obama turning app** in his video: [I made a program that turns anything into Obama](https://youtu.be/MeFi68a2pP8?si=WczfFm_GjwLiYxr6), which I stumbled upon last year. Back then, I couldn't find the source code repository anywhere online, but thought the concept was super cool and wanted to try building it myself. So I ended up reverse-engineering it on my own from scratch in modern C++.
+
+While inspired by the original video, LumaSort is a bit different: it lets you turn any image into any other image, hooks into live webcam feeds, and supports interactive real-time canvas drawing. I originally planned to record a video about the project and how it works, but got lazy and ended up never getting around to making it—so here is the engine and code for anyone to explore!
 
 ---
 
