@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="assets/icons/lumasort-logo.svg" alt="LumaSort Engine Logo" width="128">
-  <h1>LumaSort-Engine</h1>
+  <img src="assets/icons/lumasort-logo.svg" alt="LumaSort Engine" width="820">
   <p>Turn any source media (image, webcam feed, drawing) into any target image through global luminance-based optimal transport.</p>
 
   <p>
